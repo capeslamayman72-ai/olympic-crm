@@ -1,0 +1,3989 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>متابعة المتقدمين — المعهد الأوليمبي الدولي لعلوم الرياضة</title>
+<meta name="theme-color" content="#14213D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="متابعة المتقدمين">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14213D;
+    --ink-soft:#3C4A66;
+    --paper:#F3F5F4;
+    --card:#FFFFFF;
+    --line:#DFE4E2;
+    --gold:#E3A21A;
+    --muted:#8A93A6;
+    --danger:#D64545;
+    --green:#189950;
+    --shadow: 0 2px 10px rgba(20,33,61,0.06);
+    --shadow-lg: 0 12px 32px rgba(20,33,61,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Cairo',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ltr{direction:ltr;unicode-bidi:plaintext;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,textarea,select{font-family:inherit;}
+
+  .topbar{
+    background:var(--ink); color:#fff; padding:18px 18px 22px;
+    position:sticky; top:0; z-index:20; box-shadow:var(--shadow);
+  }
+  .topbar-row{display:flex;align-items:center;gap:10px;}
+  .back-btn{
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,0.12);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0; font-size:17px;
+  }
+  .brand{display:flex;flex-direction:column;flex:1;min-width:0;}
+  .brand-title{font-weight:800;font-size:16px;line-height:1.3;}
+  .brand-sub{font-size:12px;color:#B9C2D4;margin-top:2px;}
+  .sync-note{
+    margin-top:12px; font-size:11px; color:#C8D0E0;
+    background:rgba(255,255,255,0.08); border-radius:8px; padding:6px 10px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:#4FD1A5;flex-shrink:0;}
+  .dot.warn{background:var(--gold);}
+  .user-bar{
+    margin-top:10px; display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-size:11.5px;color:#C8D0E0;
+  }
+  .user-bar-actions{display:flex;gap:8px;}
+  .user-bar-btn{
+    background:rgba(255,255,255,0.12);color:#fff;
+    border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;
+  }
+
+  .home-wrap{padding:16px;max-width:720px;margin:0 auto;}
+  .home-hint{font-size:13px;color:var(--ink-soft);margin:4px 4px 14px;}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media(min-width:520px){ .grid{grid-template-columns:repeat(3,1fr);} }
+
+  .quick-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .quick-btn{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 10px;box-shadow:var(--shadow);text-align:center;
+    font-size:12.5px;font-weight:700;color:var(--ink);
+  }
+  .quick-btn .qi{display:block;font-size:19px;margin-bottom:4px;}
+
+  .sec-card{
+    background:var(--card); border-radius:16px; padding:14px; box-shadow:var(--shadow);
+    display:flex;flex-direction:column;gap:10px; text-align:right; border:1px solid var(--line);
+    transition:transform .12s ease;
+  }
+  .sec-card:active{transform:scale(0.97);}
+  .badge{
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;color:#fff;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35);
+  }
+  .sec-name{font-weight:700;font-size:13.5px;line-height:1.35;min-height:34px;}
+  .sec-count{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+  .sec-count b{color:var(--ink);font-size:13px;}
+  .sec-count .sep{color:var(--line);}
+
+  .toolbar{padding:14px 16px 0;max-width:720px;margin:0 auto;}
+  .search-row{display:flex;gap:6px;margin-bottom:10px;}
+  .search-box{
+    flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;font-size:14px;color:var(--ink);min-width:0;
+  }
+  .refresh-btn{
+    width:38px;flex-shrink:0;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;font-size:12px;font-weight:600;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink-soft);white-space:nowrap;
+  }
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .list-wrap{padding:6px 16px 100px;max-width:720px;margin:0 auto;}
+  .last-sync{font-size:11px;color:var(--muted);text-align:center;margin:6px 0 12px;}
+
+  .lead-card{
+    background:var(--card);border-radius:14px;border:1px solid var(--line);
+    padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);
+  }
+  .lead-top{display:flex;align-items:center;gap:10px;}
+  .avatar{
+    width:38px;height:38px;border-radius:50%;background:var(--paper);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+    flex-shrink:0;border:1px solid var(--line);
+  }
+  .lead-info{flex:1;min-width:0;}
+  .lead-name{font-weight:700;font-size:14.5px;}
+  .lead-phone{font-size:12.5px;color:var(--ink-soft);margin-top:1px;}
+  .lead-gov{font-size:11px;color:var(--muted);margin-top:2px;}
+  .lead-actions{display:flex;gap:5px;flex-shrink:0;}
+  .icon-btn{
+    width:30px;height:30px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;background:var(--paper);
+  }
+  .icon-btn.call{color:#2F8FE0;}
+  .icon-btn.sms{color:#7C5CFC;}
+  .icon-btn.wa{color:#25D366;}
+
+  .lead-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px;}
+  .status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;color:#fff;white-space:nowrap;}
+  .lead-note-preview{
+    font-size:11.5px;color:var(--muted);flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;
+  }
+  .lead-contact-line{
+    margin-top:8px;font-size:11px;color:var(--ink-soft);
+    background:var(--paper);border-radius:8px;padding:6px 9px;
+    display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  }
+  .lead-contact-line b{color:var(--ink);}
+  .lead-contact-line.none{color:var(--danger);background:#FBEAEA;}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+  .empty-state .big{font-size:34px;margin-bottom:10px;}
+  .empty-state p{font-size:13.5px;line-height:1.7;}
+
+  .fab{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--gold);color:#fff;width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;
+    box-shadow:var(--shadow-lg);z-index:25;
+  }
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,33,61,0.5);z-index:40;display:none;
+    align-items:flex-end;justify-content:center;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--paper);width:100%;max-width:520px;border-radius:20px 20px 0 0;
+    padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .18s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-handle{width:38px;height:4px;background:var(--line);border-radius:99px;margin:0 auto 14px;}
+  .sheet-title{font-weight:800;font-size:16px;margin-bottom:14px;}
+  .field-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin:12px 0 6px;}
+  .field-input{
+    width:100%;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:11px 13px;font-size:14px;color:var(--ink);
+  }
+  select.field-input{appearance:none;-webkit-appearance:none;}
+  textarea.field-input{resize:vertical;min-height:70px;}
+  .status-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .status-opt{
+    font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:10px;
+    border:2px solid var(--line);background:var(--card);color:var(--ink-soft);
+  }
+  .status-opt.selected{color:#fff;border-color:transparent;}
+  .sheet-actions{display:flex;gap:10px;margin-top:20px;}
+  .btn{flex:1;padding:13px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-danger{background:#FBEAEA;color:var(--danger);}
+  .btn-ghost{background:var(--card);color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-sm{padding:9px;font-size:12.5px;border-radius:10px;}
+
+  .period-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .stats-total{
+    text-align:center;font-size:13px;color:var(--ink-soft);
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px;margin-bottom:14px;font-weight:700;
+  }
+  .stats-total b{color:var(--ink);font-size:16px;margin-inline-start:4px;}
+  .stat-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .stat-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .stat-label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;}
+  .stat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .stat-figures{font-size:12px;color:var(--ink-soft);}
+  .stat-figures b{color:var(--ink);font-size:13px;}
+  .stat-bar-track{background:var(--paper);border-radius:99px;height:8px;overflow:hidden;}
+  .stat-bar-fill{height:100%;border-radius:99px;}
+  .stats-sub-title{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:18px 4px 8px;}
+  .breakdown-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .breakdown-name{font-size:13px;font-weight:700;flex:1;min-width:0;}
+  .breakdown-figs{font-size:11.5px;color:var(--ink-soft);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+  .breakdown-figs span b{color:var(--ink);}
+
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .auth-card{
+    width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-radius:20px;padding:26px 22px;box-shadow:var(--shadow-lg);
+  }
+  .auth-badge{font-size:34px;margin-bottom:8px;text-align:center;}
+  .auth-logo{width:112px;height:112px;object-fit:contain;display:inline-block;}
+  .topbar-logo{
+    width:38px;height:38px;object-fit:contain;flex-shrink:0;
+    background:#fff;border-radius:10px;padding:3px;
+  }
+  .celebrate-logo{width:66px;height:66px;object-fit:contain;display:block;margin:0 auto 4px;}
+  .auth-title{font-weight:800;font-size:16px;color:var(--ink);line-height:1.4;text-align:center;}
+  .auth-sub{font-size:12.5px;color:var(--ink-soft);margin:6px 0 18px;text-align:center;line-height:1.6;}
+  .auth-error{
+    background:#FBEAEA;color:var(--danger);font-size:12.5px;font-weight:700;
+    border-radius:10px;padding:9px 12px;margin-top:12px;text-align:center;display:none;
+  }
+
+  .new-account-result{
+    background:#EAF7EF;border:1px solid #BFE6CC;border-radius:12px;padding:12px;margin-top:12px;font-size:13px;text-align:center;
+  }
+  .new-account-result .pass-box{font-weight:800;font-size:19px;color:var(--green);margin-top:6px;letter-spacing:1px;}
+  .account-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .account-info{font-size:12.5px;color:var(--ink-soft);}
+  .account-info b{color:var(--ink);font-size:13.5px;}
+  .account-info .pass{color:var(--gold);font-weight:800;margin-inline-start:8px;}
+  .account-actions{display:flex;gap:6px;flex-shrink:0;}
+  .account-del{
+    width:30px;height:30px;border-radius:9px;background:#FBEAEA;color:var(--danger);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;
+  }
+  .account-key{
+    width:30px;height:30px;border-radius:9px;background:var(--paper);color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;
+  }
+
+  /* ===== contact history / activity ===== */
+  .history-row{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;margin-bottom:6px;
+  }
+  .history-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .history-method{font-size:12.5px;font-weight:700;}
+  .history-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.6;}
+  .history-meta b{color:var(--ink);}
+  .history-note{font-size:11.5px;color:var(--ink-soft);margin-top:4px;background:var(--paper);border-radius:7px;padding:5px 8px;}
+  .mini-del{
+    width:24px;height:24px;border-radius:7px;background:#FBEAEA;color:var(--danger);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;
+  }
+  .act-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .act-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .act-name{font-size:13.5px;font-weight:700;}
+  .act-phone{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
+  .act-body{font-size:11.5px;color:var(--ink-soft);margin-top:7px;line-height:1.8;}
+  .act-body b{color:var(--ink);}
+  .who-pill{
+    font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;
+    background:var(--ink);color:#fff;white-space:nowrap;
+  }
+  .agent-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .agent-name{font-size:13px;font-weight:700;}
+  .agent-figs{font-size:11.5px;color:var(--ink-soft);display:flex;gap:10px;flex-wrap:wrap;}
+  .agent-figs b{color:var(--ink);}
+
+  /* ===== notes timeline ===== */
+  .note-row{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;margin-bottom:8px;
+  }
+  .note-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .note-by{font-size:11.5px;color:var(--ink-soft);}
+  .note-by b{color:var(--ink);font-size:12.5px;}
+  .note-text{font-size:13px;margin-top:6px;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+  audio{height:34px;width:100%;margin-top:7px;}
+  .rec-live{
+    background:#FBEAEA;color:var(--danger);border-radius:10px;padding:9px 12px;
+    font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;
+  }
+  .rec-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* ===== export ===== */
+  .export-row{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:8px 11px;margin-bottom:6px;font-size:12.5px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .export-row .en{font-weight:700;flex:1;min-width:0;}
+  .export-row .ph{color:var(--ink-soft);}
+  .filter-block{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;margin-bottom:10px;
+  }
+  .filter-block-title{font-size:11.5px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;}
+  .chip-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+  .btn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+  .toast{
+    position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;font-size:13px;font-weight:700;
+    padding:11px 18px;border-radius:12px;box-shadow:var(--shadow-lg);z-index:60;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;max-width:88vw;text-align:center;
+  }
+  .toast.show{opacity:1;}
+
+  /* ===== نقاط وبونص ===== */
+  .rank-row{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:11px 13px;margin-bottom:9px;display:flex;align-items:center;gap:11px;box-shadow:var(--shadow);
+  }
+  .rank-row.me{border-color:var(--gold);background:#FFFCF4;}
+  .rank-badge{
+    width:40px;height:40px;border-radius:12px;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;
+    flex-shrink:0;color:var(--ink-soft);
+  }
+  .rank-info{flex:1;min-width:0;}
+  .rank-name{font-size:14px;font-weight:700;}
+  .rank-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .rank-sub b{color:var(--ink);}
+  .rank-pts{text-align:center;flex-shrink:0;min-width:64px;}
+  .rank-pts-n{font-size:21px;font-weight:800;color:var(--gold);line-height:1;}
+  .rank-pts-l{font-size:10px;color:var(--muted);margin-top:2px;}
+  .rank-bonus{font-size:11px;font-weight:800;color:var(--green);margin-top:4px;}
+  .my-points{
+    background:linear-gradient(135deg,#14213D,#2B3E68);color:#fff;border-radius:16px;
+    padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    box-shadow:var(--shadow);
+  }
+  .my-points-l{font-size:12px;color:#C8D0E0;}
+  .my-points-n{font-size:26px;font-weight:800;color:var(--gold);line-height:1.2;}
+
+  /* ===== احتفال الحجز ===== */
+  #celebrate{
+    position:fixed;inset:0;z-index:70;display:none;
+    align-items:center;justify-content:center;background:rgba(20,33,61,0.55);
+    pointer-events:none;
+  }
+  .celebrate-card{
+    background:#fff;border-radius:22px;padding:26px 30px;text-align:center;
+    box-shadow:var(--shadow-lg);animation:pop .35s cubic-bezier(.2,1.4,.4,1);
+    border:3px solid var(--gold);max-width:78vw;
+  }
+  @keyframes pop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .celebrate-emoji{font-size:52px;line-height:1;animation:bounce .6s ease infinite alternate;}
+  @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-9px)}}
+  .celebrate-pts{font-size:30px;font-weight:800;color:var(--gold);margin-top:8px;}
+  .celebrate-txt{font-size:14px;font-weight:700;color:var(--ink);margin-top:6px;}
+  .celebrate-name{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  /* ===== إضافة دورة ===== */
+  .add-sec-card{
+    background:var(--card);border:2px dashed var(--gold);border-radius:16px;padding:14px;
+    display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;
+    color:var(--gold);font-weight:700;font-size:13px;min-height:118px;
+  }
+  .add-sec-card .plus{font-size:26px;line-height:1;}
+  .sec-edit{
+    position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:8px;
+    background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:12px;
+  }
+  .sec-card{position:relative;}
+  .color-dot{width:32px;height:32px;border-radius:50%;border:3px solid transparent;flex-shrink:0;}
+  .color-dot.sel{border-color:var(--ink);}
+  .emoji-opt{
+    width:38px;height:38px;border-radius:10px;background:var(--card);
+    border:2px solid var(--line);font-size:19px;display:flex;align-items:center;justify-content:center;
+  }
+  .emoji-opt.sel{border-color:var(--gold);background:#FFF7E6;}
+
+  /* ===== الشات الجماعي ===== */
+  #chatView{display:none;flex-direction:column;height:calc(100vh - 130px);}
+  .chat-scroll{
+    flex:1;overflow-y:auto;padding:14px 16px 8px;max-width:720px;margin:0 auto;width:100%;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .chat-day{
+    align-self:center;background:var(--card);border:1px solid var(--line);
+    font-size:11px;font-weight:700;color:var(--ink-soft);
+    padding:4px 12px;border-radius:999px;margin:10px 0 6px;
+  }
+  .msg{max-width:82%;display:flex;flex-direction:column;margin-bottom:6px;}
+  .msg.mine{align-self:flex-start;}
+  .msg.theirs{align-self:flex-end;}
+  .msg-bubble{
+    padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.65;
+    word-break:break-word;white-space:pre-wrap;box-shadow:var(--shadow);
+  }
+  .msg.mine .msg-bubble{background:var(--ink);color:#fff;border-bottom-right-radius:4px;}
+  .msg.theirs .msg-bubble{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .msg-who{font-size:11px;font-weight:800;margin-bottom:3px;padding:0 4px;}
+  .msg-time{font-size:10px;color:var(--muted);margin-top:3px;padding:0 4px;}
+  .msg.mine .msg-time{text-align:right;}
+  .msg-pending{opacity:.55;}
+  .msg-del{
+    font-size:10.5px;color:var(--muted);background:none;padding:0 4px;margin-top:2px;
+    text-decoration:underline;align-self:flex-start;
+  }
+  .msg-deleted{font-style:italic;color:var(--muted);font-size:12.5px;}
+  .msg-lead{
+    background:rgba(255,255,255,0.14);border-radius:9px;padding:6px 9px;margin-bottom:6px;
+    font-size:11.5px;display:flex;align-items:center;gap:6px;cursor:pointer;
+  }
+  .msg.theirs .msg-lead{background:var(--paper);}
+  .chat-bar{
+    position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    display:flex;gap:8px;align-items:flex-end;max-width:720px;margin:0 auto;width:100%;
+  }
+  .chat-input{
+    flex:1;background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:10px 14px;font-size:14px;color:var(--ink);resize:none;max-height:110px;min-height:42px;
+    line-height:1.5;
+  }
+  .chat-send{
+    width:42px;height:42px;border-radius:50%;background:var(--ink);color:#fff;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;
+  }
+  .chat-send:disabled{opacity:.4;}
+  .chat-badge{
+    position:absolute;top:-3px;left:-3px;background:var(--danger);color:#fff;
+    font-size:9.5px;font-weight:800;min-width:16px;height:16px;border-radius:99px;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+  }
+  .quick-btn{position:relative;}
+  .chat-attach{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:7px 10px;margin-bottom:8px;font-size:11.5px;color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    max-width:720px;margin-inline:auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="loginView" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-badge">
+      <img src="logo.png" alt="شعار المعهد الأوليمبي الدولي" class="auth-logo"
+           onerror="this.style.display='none';document.getElementById('authLogoFallback').style.display='block';">
+      <span id="authLogoFallback" style="display:none;">🏅</span>
+    </div>
+    <div class="auth-title">المعهد الأوليمبي الدولي لعلوم الرياضة</div>
+    <div class="auth-sub" id="authSub">نظام متابعة المتقدمين — تسجيل الدخول</div>
+
+    <div class="field-label" id="authUserLabel">اسم المستخدم</div>
+    <input class="field-input ltr" id="authUsername" dir="ltr" placeholder="username" autocomplete="username">
+
+    <div id="authNameWrap" style="display:none;">
+      <div class="field-label">الاسم اللي هيظهر في التقارير</div>
+      <input class="field-input" id="authDisplayName" placeholder="مثال: محمد عبد العزيز">
+    </div>
+
+    <div class="field-label">كلمة المرور</div>
+    <input class="field-input ltr" id="authPassword" type="password" dir="ltr" placeholder="••••••" autocomplete="current-password">
+
+    <div id="authConfirmWrap" style="display:none;">
+      <div class="field-label">تأكيد كلمة المرور</div>
+      <input class="field-input ltr" id="authPasswordConfirm" type="password" dir="ltr" placeholder="••••••" autocomplete="new-password">
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <button class="btn btn-primary" id="authBtn" style="width:100%;margin-top:16px;">دخول</button>
+    <button id="authOwnerLink" style="display:none;width:100%;margin-top:12px;font-size:12px;color:var(--muted);text-decoration:underline;">
+      أول تشغيل للسيرفر؟ إنشاء حساب المالك
+    </button>
+  </div>
+</div>
+
+<div class="topbar" id="appTopbar" style="display:none;">
+  <div class="topbar-row">
+    <button class="back-btn" id="backBtn" style="display:none;">→</button>
+    <img src="logo.png" alt="" class="topbar-logo" onerror="this.style.display='none';">
+    <div class="brand">
+      <div class="brand-title" id="headerTitle">المعهد الأوليمبي الدولي لعلوم الرياضة</div>
+      <div class="brand-sub" id="headerSub">متابعة المتقدمين للدورات التدريبية</div>
+    </div>
+    <button class="back-btn" id="statsHomeBtn" title="الإحصائيات العامة">📊</button>
+  </div>
+  <div class="sync-note"><span class="dot" id="storageDot"></span> <span id="storageNote">جاري فحص طريقة التخزين...</span></div>
+  <div class="user-bar" id="userBar">
+    <span id="userBarText"></span>
+    <div class="user-bar-actions">
+      <button class="user-bar-btn" id="soundBtn" title="صوت الإنجاز">🔊</button>
+      <button class="user-bar-btn" id="ownerPanelBtn" style="display:none;">إدارة الحسابات</button>
+      <button class="user-bar-btn" id="logoutBtn">خروج</button>
+    </div>
+  </div>
+</div>
+
+<div id="homeView" class="home-wrap" style="display:none;">
+  <div class="my-points" id="myPointsBox">
+    <div>
+      <div class="my-points-l">نقاطك هذا الشهر</div>
+      <div class="my-points-n" id="myPointsN">0</div>
+    </div>
+    <button class="user-bar-btn" id="goPointsBtn" style="background:var(--gold);padding:9px 14px;font-size:12px;">🏆 لوحة الترتيب</button>
+  </div>
+  <div class="quick-row">
+    <button class="quick-btn" id="goChatBtn">
+      <span class="chat-badge" id="chatBadge" style="display:none;">0</span>
+      <span class="qi">💬</span>شات الفريق<br><span style="font-weight:500;color:var(--muted);font-size:11px;">تواصل مع كل السيلز</span>
+    </button>
+    <button class="quick-btn" id="goActivityBtn"><span class="qi">🗂️</span>سجل التواصل<br><span style="font-weight:500;color:var(--muted);font-size:11px;">مين تواصل ومتى وإزاي</span></button>
+    <button class="quick-btn" id="goExportHomeBtn"><span class="qi">📤</span>تصدير الأرقام<br><span style="font-weight:500;color:var(--muted);font-size:11px;">فلترة ونسخ وتنزيل</span></button>
+    <button class="quick-btn" id="goPointsBtn2"><span class="qi">🏆</span>لوحة الترتيب<br><span style="font-weight:500;color:var(--muted);font-size:11px;">النقاط والبونص</span></button>
+  </div>
+  <div class="home-hint">اختر القسم عشان تشوف قائمة المتقدمين وتتابع معاهم</div>
+  <div class="grid" id="secGrid"></div>
+</div>
+
+<div id="sectionView" style="display:none;">
+  <div class="toolbar">
+    <div class="search-row">
+      <input class="search-box" id="searchInput" placeholder="بحث بالاسم أو رقم الهاتف...">
+      <button class="refresh-btn" id="statsSectionBtn" title="إحصائيات الدورة">📊</button>
+      <button class="refresh-btn" id="refreshBtn" title="تحديث">⟳</button>
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+  </div>
+  <div class="list-wrap">
+    <div class="last-sync" id="lastSync"></div>
+    <div id="leadsList"></div>
+  </div>
+</div>
+
+<div id="statsView" style="display:none;">
+  <div class="toolbar">
+    <div class="period-row" id="periodRow">
+      <button class="chip active" data-period="all">الكل</button>
+      <button class="chip" data-period="month">شهر معيّن</button>
+      <button class="chip" data-period="year">سنة معيّنة</button>
+    </div>
+    <input type="month" class="field-input" id="periodMonthInput" style="display:none;margin-bottom:10px;">
+    <input type="number" class="field-input" id="periodYearInput" style="display:none;margin-bottom:10px;" placeholder="مثال: 2026">
+  </div>
+  <div class="list-wrap">
+    <div class="stats-total" id="statsTotal"></div>
+    <div id="statsRows"></div>
+    <div id="statsAgentsWrap" style="display:none;">
+      <div class="stats-sub-title">أداء فريق المبيعات (تواصلات / عملاء / حجوزات)</div>
+      <div id="statsAgents"></div>
+    </div>
+    <div id="statsBreakdownWrap" style="display:none;">
+      <div class="stats-sub-title">توزيع الدورات (تم الحجز / غير مهتم / الإجمالي)</div>
+      <div id="statsBreakdown"></div>
+    </div>
+    <button class="btn btn-primary" id="goExportBtn" style="width:100%;margin-top:18px;">📤 تصدير أرقام الهواتف</button>
+  </div>
+</div>
+
+<!-- ============ سجل التواصل ============ -->
+<div id="activityView" style="display:none;">
+  <div class="toolbar">
+    <div class="filter-block">
+      <div class="filter-block-title">الفترة الزمنية</div>
+      <div class="chip-wrap" id="actPeriodRow">
+        <button class="chip active" data-p="today">النهارده</button>
+        <button class="chip" data-p="yesterday">امبارح</button>
+        <button class="chip" data-p="week">آخر 7 أيام</button>
+        <button class="chip" data-p="month">آخر 30 يوم</button>
+        <button class="chip" data-p="all">الكل</button>
+        <button class="chip" data-p="custom">تاريخ محدد</button>
+      </div>
+      <div id="actCustomWrap" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:8px;">
+          <input type="date" class="field-input" id="actFrom">
+          <input type="date" class="field-input" id="actTo">
+        </div>
+      </div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">السيلز</div>
+      <div class="chip-wrap" id="actAgentRow"></div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">طريقة التواصل</div>
+      <div class="chip-wrap" id="actMethodRow">
+        <button class="chip active" data-m="all">الكل</button>
+        <button class="chip" data-m="call">📞 اتصال</button>
+        <button class="chip" data-m="wa">🟢 واتساب</button>
+        <button class="chip" data-m="sms">✉️ SMS</button>
+        <button class="chip" data-m="visit">🤝 مقابلة</button>
+        <button class="chip" data-m="status">🔄 تغيير حالة</button>
+      </div>
+    </div>
+    <input class="search-box" id="actSearch" placeholder="بحث باسم المتقدم أو رقمه..." style="width:100%;margin-bottom:10px;">
+  </div>
+  <div class="list-wrap">
+    <div class="stats-total" id="actTotal"></div>
+    <div id="actAgentSummary" style="margin-bottom:14px;"></div>
+    <button class="btn btn-ghost btn-sm" id="actExportBtn" style="width:100%;margin-bottom:14px;">⬇️ تنزيل السجل كملف CSV (Excel)</button>
+    <div id="actList"></div>
+  </div>
+</div>
+
+<!-- ============ تصدير الأرقام ============ -->
+<div id="exportView" style="display:none;">
+  <div class="toolbar">
+    <div class="filter-block">
+      <div class="filter-block-title">فلاتر جاهزة</div>
+      <div class="chip-wrap" id="expPresetRow">
+        <button class="chip active" data-preset="all">الكل</button>
+        <button class="chip" data-preset="replied">اللي رد</button>
+        <button class="chip" data-preset="booked">اللي حجز</button>
+        <button class="chip" data-preset="not_booked">لسه محجزش</button>
+        <button class="chip" data-preset="no_contact">متواصلناش معاهم</button>
+        <button class="chip" data-preset="interested">مهتمين (رد + هيحجز)</button>
+      </div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">الحالات (اختيار متعدد)</div>
+      <div class="chip-wrap" id="expStatusRow"></div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">الأقسام (اختيار متعدد)</div>
+      <div class="chip-wrap" id="expSectionRow"></div>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">فلاتر إضافية</div>
+      <select class="field-input" id="expGov" style="margin-bottom:8px;"></select>
+      <select class="field-input" id="expAgent" style="margin-bottom:8px;"></select>
+      <div style="display:flex;gap:8px;">
+        <input type="date" class="field-input" id="expFrom" title="من تاريخ التسجيل">
+        <input type="date" class="field-input" id="expTo" title="إلى تاريخ التسجيل">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-top:10px;color:var(--ink-soft);font-weight:700;">
+        <input type="checkbox" id="expDedup" checked style="width:17px;height:17px;"> استبعاد الأرقام المكررة
+      </label>
+    </div>
+    <div class="filter-block">
+      <div class="filter-block-title">شكل المخرجات</div>
+      <select class="field-input" id="expFormat">
+        <option value="phone">أرقام فقط (رقم في كل سطر)</option>
+        <option value="name_phone" selected>الاسم - الرقم</option>
+        <option value="intl">صيغة دولية للواتساب (‎+20…)</option>
+        <option value="csv">جدول CSV كامل (Excel)</option>
+      </select>
+    </div>
+  </div>
+  <div class="list-wrap">
+    <div class="stats-total" id="exportTotal"></div>
+    <div class="btn-grid">
+      <button class="btn btn-primary btn-sm" id="copyNumbersBtn">📋 نسخ</button>
+      <button class="btn btn-ghost btn-sm" id="downloadNumbersBtn">⬇️ تنزيل TXT</button>
+      <button class="btn btn-ghost btn-sm" id="downloadCsvBtn">📊 تنزيل CSV</button>
+      <button class="btn btn-ghost btn-sm" id="downloadVcfBtn">👥 جهات اتصال VCF</button>
+    </div>
+    <div id="exportList"></div>
+  </div>
+</div>
+
+<!-- ============ استيراد أرقام ============ -->
+<div id="importView" style="display:none;">
+  <div class="list-wrap" style="padding-top:16px;">
+    <div class="field-label">القسم اللي هتتضاف فيه الأرقام</div>
+    <select class="field-input" id="impSection"></select>
+
+    <div class="field-label">المحافظة (اختياري — هتتطبق على الكل)</div>
+    <select class="field-input" id="impGov"></select>
+
+    <div class="field-label">الصق الأرقام هنا (رقم في كل سطر، ممكن تكتب: الاسم , الرقم)</div>
+    <textarea class="field-input" id="impText" style="min-height:150px;" dir="ltr" placeholder="+201012345678&#10;أحمد محمد , 01098765432"></textarea>
+
+    <div class="field-label">أو ارفع ملف TXT / CSV</div>
+    <input type="file" class="field-input" id="impFile" accept=".txt,.csv">
+
+    <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.7;">
+      هيتم تجاهل أي رقم موجود بالفعل في نفس القسم تلقائياً. الأرقام من غير اسم هتتسجل باسم «متقدم — آخر 4 أرقام».
+    </div>
+    <button class="btn btn-primary" id="impRunBtn" style="width:100%;margin-top:14px;">استيراد الأرقام</button>
+    <div id="impResult" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- ============ لوحة النقاط والبونص ============ -->
+<div id="pointsView" style="display:none;">
+  <div class="toolbar">
+    <div class="period-row" id="pointsPeriodRow">
+      <button class="chip active" data-p="month">الشهر ده</button>
+      <button class="chip" data-p="prev">الشهر اللي فات</button>
+      <button class="chip" data-p="all">من البداية</button>
+      <button class="chip" data-p="pick">شهر محدد</button>
+    </div>
+    <input type="month" class="field-input" id="pointsMonth" style="display:none;margin-bottom:10px;">
+  </div>
+  <div class="list-wrap">
+    <div class="stats-total" id="pointsTotal"></div>
+    <div id="pointsRules" style="font-size:11.5px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.7;"></div>
+    <div id="pointsList"></div>
+    <button class="btn btn-ghost btn-sm" id="pointsExportBtn" style="width:100%;margin-top:14px;">⬇️ تنزيل كشف البونص (CSV)</button>
+  </div>
+</div>
+
+<!-- ============ الشات الجماعي ============ -->
+<div id="chatView" style="display:none;">
+  <div class="chat-scroll" id="chatScroll"></div>
+  <div id="chatAttachBar" style="display:none;">
+    <div class="chat-attach">
+      <span id="chatAttachTxt"></span>
+      <button class="mini-del" id="chatAttachClear" title="إلغاء">✕</button>
+    </div>
+  </div>
+  <div class="chat-bar">
+    <textarea class="chat-input" id="chatInput" rows="1" placeholder="اكتب رسالة للفريق..."></textarea>
+    <button class="chat-send" id="chatSendBtn" title="إرسال">➤</button>
+  </div>
+</div>
+
+<div id="ownerView" style="display:none;">
+  <div class="list-wrap" style="padding-top:16px;">
+    <div class="field-label">اسم السيلز (زي ما هيظهر في التقارير)</div>
+    <input class="field-input" id="newSalesUsername" placeholder="مثال: أحمد محمد">
+    <div id="newSalesEmailWrap" style="display:none;">
+      <div class="field-label">البريد الإلكتروني للسيلز</div>
+      <input class="field-input ltr" id="newSalesEmail" type="email" dir="ltr" placeholder="ahmed@example.com">
+    </div>
+    <button class="btn btn-primary" id="createSalesBtn" style="width:100%;margin-top:10px;">توليد كلمة مرور وإنشاء الحساب</button>
+    <div class="new-account-result" id="newAccountResult" style="display:none;"></div>
+
+    <div id="myPassWrap" style="display:none;">
+      <div class="stats-sub-title">كلمة المرور بتاعتك</div>
+      <div class="filter-block">
+        <div class="field-label" style="margin-top:0;">كلمة مرور جديدة</div>
+        <input class="field-input ltr" id="myNewPass" type="password" dir="ltr" placeholder="8 حروف/أرقام على الأقل">
+        <button class="btn btn-ghost btn-sm" id="changeMyPassBtn" style="width:100%;margin-top:10px;">تغيير كلمة المرور</button>
+      </div>
+    </div>
+
+    <div class="stats-sub-title">حسابات السيلز الحالية</div>
+    <div id="salesAccountsList"></div>
+
+    <div class="stats-sub-title">ربط أجهزة السيلز (قاعدة بيانات مشتركة)</div>
+    <div class="filter-block">
+      <div id="cloudStatus" style="font-size:12.5px;font-weight:700;padding:9px 11px;border-radius:10px;margin-bottom:10px;"></div>
+      <div class="field-label" style="margin-top:0;">Project URL</div>
+      <input class="field-input ltr" id="cloudUrl" dir="ltr" placeholder="https://xxxxx.supabase.co">
+      <div class="field-label">anon public key</div>
+      <input class="field-input ltr" id="cloudKey" dir="ltr" placeholder="eyJhbGciOi...">
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-primary btn-sm" id="cloudTestBtn">اختبار وحفظ على الجهاز ده</button>
+        <button class="btn btn-ghost btn-sm" id="cloudClearBtn">فصل</button>
+      </div>
+      <button class="btn btn-gold btn-sm" id="cloudPushBtn" style="width:100%;margin-top:8px;">⬆️ رفع بيانات الجهاز ده للسيرفر</button>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.7;">
+        عشان كل الأجهزة تتربط تلقائياً من غير ما تكتب البيانات دي على كل موبايل،
+        حط نفس القيم في ملف <b class="ltr">config.js</b> وارفعه على الاستضافة.
+      </div>
+    </div>
+
+    <div class="stats-sub-title">إعدادات نظام البونص</div>
+    <div class="filter-block">
+      <div class="field-label" style="margin-top:0;">نقاط لكل حجز مكتمل</div>
+      <input type="number" class="field-input ltr" id="setPointsPer" min="1" step="1" dir="ltr">
+      <div class="field-label">قيمة النقطة الواحدة (اكتب 0 لو مش عايز تحسب فلوس)</div>
+      <input type="number" class="field-input ltr" id="setPointValue" min="0" step="1" dir="ltr">
+      <div class="field-label">العملة</div>
+      <input class="field-input" id="setCurrency" placeholder="جنيه">
+      <button class="btn btn-primary btn-sm" id="saveSettingsBtn" style="width:100%;margin-top:12px;">حفظ إعدادات البونص</button>
+    </div>
+
+    <div class="stats-sub-title">أدوات المالك</div>
+    <button class="btn btn-gold btn-sm" id="goImportBtn" style="width:100%;margin-bottom:8px;">📥 استيراد أرقام من ملف / نص</button>
+    <button class="btn btn-ghost btn-sm" id="backupBtn" style="width:100%;margin-bottom:8px;">🛡️ تنزيل نسخة احتياطية كاملة (JSON)</button>
+    <button class="btn btn-ghost btn-sm" id="restoreBtn" style="width:100%;">♻️ استرجاع نسخة احتياطية</button>
+    <input type="file" id="restoreFile" accept=".json" style="display:none;">
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" style="display:none;">＋</button>
+
+<div class="overlay" id="leadOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheetTitle">إضافة متقدم جديد</div>
+
+    <div class="field-label">الاسم</div>
+    <input class="field-input" id="nameInput" placeholder="اسم المتقدم">
+
+    <div class="field-label">رقم الهاتف</div>
+    <input class="field-input ltr" id="phoneInput" placeholder="01xxxxxxxxx" dir="ltr" inputmode="tel">
+
+    <div class="field-label">المحافظة اللي هتُقام فيها الدورة</div>
+    <select class="field-input" id="govInput"></select>
+
+    <div id="statusSection" style="display:none;">
+      <div class="field-label">حالة المتابعة</div>
+      <div class="status-grid" id="statusGrid"></div>
+    </div>
+
+    <div id="notesWrap">
+      <div class="field-label">الملاحظات</div>
+      <textarea class="field-input" id="notesInput" placeholder="اكتب ملاحظة عن المكالمة أو المتقدم..."></textarea>
+      <div id="notesToolbar" style="display:none;">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="addNoteBtn">➕ إضافة ملاحظة مكتوبة</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="voiceRecordBtn">🎙️ ملاحظة صوتية</button>
+        </div>
+        <div class="rec-live" id="recLive" style="display:none;">
+          <span style="display:flex;align-items:center;gap:7px;"><span class="rec-dot"></span> جاري التسجيل — <span id="recTimer" class="ltr">0:00</span></span>
+          <span style="display:flex;gap:6px;">
+            <button type="button" class="mini-del" id="recCancelBtn" title="إلغاء">✕</button>
+            <button type="button" class="btn btn-primary btn-sm" id="recStopBtn" style="padding:5px 12px;">حفظ</button>
+          </span>
+        </div>
+        <div id="notesTimeline" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div id="historyWrap" style="display:none;">
+      <div class="field-label">سجل التواصل (مين تواصل ومتى وإزاي)</div>
+      <button type="button" class="btn btn-ghost btn-sm" id="addContactBtn" style="width:100%;margin-bottom:10px;">➕ تسجيل تواصل يدوي</button>
+      <div id="historyList"></div>
+    </div>
+
+    <button type="button" class="btn btn-ghost btn-sm" id="shareToChatBtn" style="width:100%;margin-top:14px;display:none;">💬 مشاركة المتقدم في شات الفريق</button>
+
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="cancelBtn">إلغاء</button>
+      <button class="btn btn-danger" id="deleteBtn" style="display:none;">حذف</button>
+      <button class="btn btn-primary" id="saveBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- تسجيل تواصل يدوي -->
+<div class="overlay" id="contactOverlay">
+  <div class="sheet" style="max-width:440px;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">تسجيل تواصل يدوي</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:6px;">
+      استخدم ده لو تواصلت مع المتقدم من جهاز تاني أو قابلته شخصياً.
+    </div>
+
+    <div class="field-label">طريقة التواصل</div>
+    <div class="status-grid" id="contactMethodGrid"></div>
+
+    <div class="field-label">التاريخ والوقت</div>
+    <input type="datetime-local" class="field-input" id="contactWhen">
+
+    <div class="field-label">ملاحظة عن التواصل (اختياري)</div>
+    <textarea class="field-input" id="contactNote" placeholder="مثلاً: طلب يفكر ويرد بكرة"></textarea>
+
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="contactCancelBtn">إلغاء</button>
+      <button class="btn btn-primary" id="contactSaveBtn">تسجيل</button>
+    </div>
+  </div>
+</div>
+
+<!-- إضافة / تعديل دورة -->
+<div class="overlay" id="sectionOverlay">
+  <div class="sheet" style="max-width:440px;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="secSheetTitle">إضافة دورة جديدة</div>
+
+    <div class="field-label">اسم الدورة</div>
+    <input class="field-input" id="secNameInput" placeholder="مثال: دبلومة الإصابات الرياضية">
+
+    <div class="field-label">لون الدورة</div>
+    <div class="chip-wrap" id="secColorGrid"></div>
+    <input type="hidden" id="secColorSel">
+
+    <div class="field-label">أيقونة الدورة</div>
+    <div class="chip-wrap" id="secEmojiGrid"></div>
+    <input type="hidden" id="secEmojiSel">
+
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="secCancelBtn">إلغاء</button>
+      <button class="btn btn-danger" id="secDeleteBtn" style="display:none;">حذف</button>
+      <button class="btn btn-primary" id="secSaveBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div id="celebrate">
+  <div class="celebrate-card">
+    <div class="celebrate-emoji">🏆</div>
+    <div class="celebrate-pts" id="celebratePts">+1 نقطة</div>
+    <div class="celebrate-txt">تم الحجز — مبروك!</div>
+    <div class="celebrate-name" id="celebrateName"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LEADS_KEY = 'crm-leads-v1';
+const ACCOUNTS_KEY = 'crm-accounts-v1';
+const VOICE_PREFIX = 'voice-notes-';
+
+const SECTIONS_KEY  = 'crm-sections-v1';
+const SETTINGS_KEY  = 'crm-settings-v1';
+
+const DEFAULT_SECTIONS = [
+  {id:'fitness',   name:'المعد البدني',                     color:'#E3A21A'},
+  {id:'football',  name:'دبلومة الكورة',                      color:'#E0563A'},
+  {id:'sportmed',  name:'دبلومة الطب الرياضي',                color:'#2E9E6C'},
+  {id:'cupping',   name:'الحجامة والتدليك',                    color:'#7C5CFC'},
+  {id:'analysis',  name:'تحليل الأداء',                       color:'#2F8FE0'},
+  {id:'youth',     name:'تدريب البراعم والناشئين',              color:'#8AA624'},
+  {id:'anatomy',   name:'التشريح وعلم الحركة',                 color:'#C94F7B'},
+  {id:'coach',     name:'المدرب الشخصي',                       color:'#5B6B7A'},
+  {id:'nutrition', name:'التغذية',                             color:'#4A47A3'},
+  {id:'rehab',     name:'التأهيل',                             color:'#1FA9A0'},
+  {id:'hydro',     name:'العلاج المائي',                       color:'#9C4DCC'},
+];
+/* الأقسام قابلة للتعديل — المالك يقدر يضيف دورات جديدة */
+let SECTIONS = DEFAULT_SECTIONS.slice();
+let allSectionRecords = [];          /* شامل المحذوف عشان ما يرجعش بعد المزامنة */
+let sectionMap = {};
+function rebuildSectionMap(){ sectionMap = Object.fromEntries(SECTIONS.map(s=>[s.id,s])); }
+rebuildSectionMap();
+
+const SECTION_PALETTE = ['#E3A21A','#E0563A','#2E9E6C','#7C5CFC','#2F8FE0','#8AA624','#C94F7B','#5B6B7A','#4A47A3','#1FA9A0','#9C4DCC','#D64545','#189950','#14213D'];
+const SECTION_EMOJIS  = ['🏋️','⚽','🩺','🌿','📊','🧒','🦴','👤','🥗','♿','🏊','🥊','🏃','🧘','🤸','🎽','🏅','📚'];
+
+const GOVERNORATES = [
+  'القاهرة','الجيزة','الإسكندرية','الدقهلية','البحر الأحمر','البحيرة','الفيوم','الغربية',
+  'الإسماعيلية','المنوفية','المنيا','القليوبية','الوادي الجديد','السويس','أسوان','أسيوط',
+  'بني سويف','بورسعيد','دمياط','الشرقية','جنوب سيناء','كفر الشيخ','مطروح','الأقصر',
+  'قنا','شمال سيناء','سوهاج'
+];
+
+const STATUSES = [
+  {key:'new',            label:'جديد',                color:'#8A93A6'},
+  {key:'replied',        label:'رد',                  color:'#2E9E6C'},
+  {key:'will_book',      label:'هيحجز',               color:'#2F8FE0'},
+  {key:'booked',         label:'تم الحجز',            color:'#189950'},
+  {key:'closed',         label:'مغلق',                color:'#5B6B7A'},
+  {key:'wrong',          label:'رقم خطأ',             color:'#B23A3A'},
+  {key:'no_answer',      label:'مبيجمعش',             color:'#C9822E'},
+  {key:'not_interested', label:'غير مهتم',            color:'#D64545'},
+  {key:'call_later',     label:'إعادة اتصال لاحقاً',   color:'#E3A21A'},
+];
+const statusMap = Object.fromEntries(STATUSES.map(s=>[s.key,s]));
+
+const METHOD_LABELS = {
+  call:    '📞 اتصال هاتفي',
+  sms:     '✉️ رسالة SMS',
+  wa:      '🟢 واتساب',
+  visit:   '🤝 مقابلة شخصية',
+  other:   '💬 وسيلة أخرى',
+  created: '🆕 تسجيل متقدم جديد',
+  status:  '🔄 تغيير الحالة'
+};
+/* الطرق اللي بتتحسب "تواصل فعلي" مع العميل */
+const CONTACT_METHODS = ['call','sms','wa','visit','other'];
+const MANUAL_METHODS = [
+  {key:'call',  label:'📞 اتصال'},
+  {key:'wa',    label:'🟢 واتساب'},
+  {key:'sms',   label:'✉️ SMS'},
+  {key:'visit', label:'🤝 مقابلة'},
+  {key:'other', label:'💬 أخرى'},
+];
+
+const SECTION_ICONS = {
+  fitness: '<svg viewBox="0 0 24 24" width="22" height="22"><rect x="4.3" y="8.3" width="3" height="7.4" rx="1" fill="#fff"/><rect x="16.7" y="8.3" width="3" height="7.4" rx="1" fill="#fff"/><rect x="7" y="11" width="10" height="2" rx="1" fill="#fff"/><rect x="2" y="10" width="2" height="4" rx="1" fill="#fff"/><rect x="20" y="10" width="2" height="4" rx="1" fill="#fff"/></svg>',
+  football: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="8.6" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M12 7.2l3.1 2.2-1.2 3.6h-3.8l-1.2-3.6z" fill="#fff"/><path d="M12 7.2V4.4M15.1 9.4l2.9-1.7M13.9 13l1.7 3.1M10.1 13l-1.7 3.1M8.9 9.4 6 7.7" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  sportmed: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M3.5 12.5h4l1.6-4.4 3 8 1.6-4.4H20.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  cupping: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="8" cy="9" r="3.3" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16" cy="9" r="3.3" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M5.8 15.5c1.6 2 4 3.2 6.2 3.2s4.6-1.2 6.2-3.2" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
+  analysis: '<svg viewBox="0 0 24 24" width="22" height="22"><rect x="4" y="13.5" width="3.2" height="6.5" rx="0.8" fill="#fff"/><rect x="10.4" y="8.5" width="3.2" height="11.5" rx="0.8" fill="#fff"/><rect x="16.8" y="4.5" width="3.2" height="15.5" rx="0.8" fill="#fff"/></svg>',
+  youth: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="5.6" r="2.2" fill="#fff"/><path d="M12 7.8v4.6M12 12.4l-3.8 5.8M12 12.4l3.8 5.8M8.4 10.6l-2.9 1.9M15.6 10.6l2.9 1.9" stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none"/></svg>',
+  anatomy: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="5.2" r="2.2" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M12 7.4v9.6M8.2 10.2h7.6M9 20l3-3.8 3 3.8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  coach: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="11" cy="6" r="2.4" fill="#fff"/><path d="M5.5 19.5c0-3.3 2.5-5.7 5.5-5.7s5.5 2.4 5.5 5.7" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round"/><circle cx="18.3" cy="7.4" r="1.6" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M16.9 7.4h-1.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  nutrition: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 8.8c-3 0-5.3 2.5-5.3 5.9 0 3.1 2 6 3.9 6 .8 0 1-.4 1.4-.4s.6.4 1.4.4c1.9 0 3.9-2.9 3.9-6 0-3.4-2.3-5.9-5.3-5.9z" fill="#fff"/><path d="M12.4 8.8c0-1.5.9-2.6 2.1-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>',
+  rehab: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 3.5v17M6.3 3.5h5.4M6.6 7.6h4.8" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><circle cx="16.3" cy="15.5" r="2.9" fill="none" stroke="#fff" stroke-width="1.7"/></svg>',
+  hydro: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3.2c2.8 3.8 4.7 6.5 4.7 9.3a4.7 4.7 0 1 1-9.4 0c0-2.8 1.9-5.5 4.7-9.3z" fill="#fff"/><path d="M3 19c1.4.9 2.9.9 4.3 0s2.9-.9 4.3 0 2.9.9 4.3 0 2.9-.9 4.3 0" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>',
+};
+
+/* ================= STORAGE LAYER =================
+   بيشتغل في 3 حالات:
+   1) جوّه Claude artifact  -> window.storage (متزامن بين الأجهزة)
+   2) متصفح عادي            -> IndexedDB (محلي على الجهاز)
+   3) fallback أخير         -> localStorage
+================================================== */
+const Store = (function(){
+  let mode = 'unknown';
+  let dbPromise = null;
+  let cloud = null;          /* {url, key} */
+  let pendingSync = false;   /* في تعديلات محلية لسه ما اترفعتش */
+
+  function cloudConfig(){
+    let cfg = (window.CRM_CONFIG || {});
+    /* إعداد محلي على الجهاز بيغلب الملف — مفيد للتجربة قبل الرفع */
+    try{
+      const ov = localStorage.getItem('crm-cloud');
+      if(ov){ const o = JSON.parse(ov); if(o && o.url && o.key) cfg = o; }
+    }catch(e){}
+    if(cfg && cfg.url && cfg.key){
+      return {url: String(cfg.url).replace(/\/+$/,''), key: String(cfg.key)};
+    }
+    return null;
+  }
+  let authToken = null;              /* JWT بتاع المستخدم الحالي */
+  let onTokenExpired = null;         /* دالة بتحاول تجدد التوكن */
+
+  /* Supabase عندها نوعين مفاتيح:
+     • القديم (anon) وهو JWT بيبدأ بـ eyJ
+     • الجديد (publishable) وهو مش JWT وبيبدأ بـ sb_publishable_
+     المفتاح الجديد لازم يتبعت في apikey بس — لو اتبعت كـ Bearer السيرفر بيرفضه. */
+  function cloudHeaders(){
+    const h = {'apikey': cloud.key, 'Content-Type': 'application/json'};
+    if(authToken) h['Authorization'] = 'Bearer ' + authToken;
+    return h;
+  }
+  /* أي طلب بيرجع 401 معناه التوكن خلص — نجدده ونعيد المحاولة مرة واحدة */
+  async function authedFetch(url, opts, retried){
+    const r = await fetch(url, opts);
+    if(r.status === 401 && !retried && onTokenExpired){
+      const ok = await onTokenExpired();
+      if(ok){
+        opts.headers = Object.assign({}, opts.headers, {'Authorization': 'Bearer ' + authToken});
+        return await authedFetch(url, opts, true);
+      }
+    }
+    return r;
+  }
+  /* فحص إن السيرفر موجود ورادّ — أي رد HTTP كفاية حتى لو 401،
+     لأن الرفض من غير تسجيل دخول ده السلوك الصح أمنياً */
+  async function cloudPing(){
+    const r = await fetch(cloud.url + '/rest/v1/crm_kv?select=key&limit=1', {headers: cloudHeaders()});
+    return r.status > 0;
+  }
+  async function cloudGet(key){
+    const r = await authedFetch(cloud.url + '/rest/v1/crm_kv?select=value&key=eq.' + encodeURIComponent(key), {headers: cloudHeaders()});
+    if(!r.ok) throw new Error('cloud get ' + r.status);
+    const rows = await r.json();
+    return rows.length ? rows[0].value : null;
+  }
+  /* رفض الصلاحيات ≠ انقطاع النت. الأول معناه مش مسجل دخول، التاني بس اللي يخلينا أوفلاين */
+  function isAuthError(e){ return /\b(401|403)\b/.test(e && e.message || ''); }
+  async function cloudSet(key, value){
+    const r = await authedFetch(cloud.url + '/rest/v1/crm_kv', {
+      method: 'POST',
+      headers: Object.assign(cloudHeaders(), {'Prefer': 'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify([{key, value, updated_at: new Date().toISOString()}])
+    });
+    if(!r.ok) throw new Error('cloud set ' + r.status + ' ' + (await r.text()).slice(0,120));
+    return true;
+  }
+
+  function hasArtifactStorage(){
+    return typeof window !== 'undefined' && window.storage
+      && typeof window.storage.get === 'function'
+      && typeof window.storage.set === 'function';
+  }
+  function openDB(){
+    if(dbPromise) return dbPromise;
+    dbPromise = new Promise((res, rej)=>{
+      let req;
+      try{ req = indexedDB.open('olympic-crm', 1); }
+      catch(e){ rej(e); return; }
+      req.onupgradeneeded = ()=>{ req.result.createObjectStore('kv'); };
+      req.onsuccess = ()=> res(req.result);
+      req.onerror   = ()=> rej(req.error);
+    });
+    return dbPromise;
+  }
+  async function idbGet(key){
+    const db = await openDB();
+    return new Promise((res, rej)=>{
+      const tx = db.transaction('kv','readonly');
+      const r = tx.objectStore('kv').get(key);
+      r.onsuccess = ()=> res(r.result === undefined ? null : r.result);
+      r.onerror   = ()=> rej(r.error);
+    });
+  }
+  async function idbSet(key, val){
+    const db = await openDB();
+    return new Promise((res, rej)=>{
+      const tx = db.transaction('kv','readwrite');
+      tx.objectStore('kv').put(val, key);
+      tx.oncomplete = ()=> res(true);
+      tx.onerror    = ()=> rej(tx.error);
+    });
+  }
+
+  /* التخزين المحلي — بيشتغل دايماً كنسخة احتياطية حتى في وضع السحابة */
+  let localMode = 'idb';
+  async function localGet(key){
+    try{
+      if(localMode !== 'idb') return localStorage.getItem(key);
+      return await withTimeout(idbGet(key), 5000, null);
+    }catch(e){ return null; }
+  }
+  async function localSet(key, value){
+    try{
+      if(localMode === 'idb') return await withTimeout(idbSet(key, value).then(()=>true), 5000, false);
+      localStorage.setItem(key, value); return true;
+    }catch(e){ return false; }
+  }
+
+  /* أي عملية تخزين ممكن تعلّق (قاعدة بيانات مقفولة، نت واقف) — نحطّ لها مهلة
+     عشان البرنامج يفتح دايماً بدل ما يفضل على شاشة بيضا */
+  function withTimeout(p, ms, fallback){
+    return Promise.race([
+      Promise.resolve(p).catch(()=>fallback),
+      new Promise(res => setTimeout(()=>res(fallback), ms))
+    ]);
+  }
+
+  async function detect(){
+    /* 1) قاعدة بيانات مشتركة (Supabase) */
+    const cfg = cloudConfig();
+    const idbOk = await withTimeout(idbSet('__probe__', 1).then(()=>true), 3000, false);
+    localMode = idbOk ? 'idb' : 'ls';
+    if(cfg){
+      cloud = cfg;
+      try{
+        const ok = await withTimeout(cloudPing(), 8000, null);
+        if(ok === null) throw new Error('timeout');
+        mode = 'cloud';
+        return mode;
+      }catch(e){
+        console.warn('cloud unreachable, using local', e);
+        cloud = cfg;         /* نحتفظ بالإعداد ونحاول تاني بعدين */
+        mode = 'cloud-offline';
+        return mode;
+      }
+    }
+    /* 2) داخل Claude artifact */
+    if(hasArtifactStorage()){
+      try{ await window.storage.get('__probe__', true); mode = 'artifact'; return mode; }
+      catch(e){ /* نكمل */ }
+    }
+    /* 3) محلي */
+    mode = localMode;
+    return mode;
+  }
+
+  async function retryCloud(){
+    if(!cloud) return false;
+    try{ await cloudPing(); mode = 'cloud'; return true; }
+    catch(e){ mode = 'cloud-offline'; return false; }
+  }
+
+  return {
+    get mode(){ return mode; },
+    get pending(){ return pendingSync; },
+    get cloudUrl(){ return cloud ? cloud.url : null; },
+    get anonKey(){ return cloud ? cloud.key : null; },
+    get token(){ return authToken; },
+    hasCloudConfig(){ return !!cloudConfig(); },
+    setAuthToken(t){ authToken = t || null; },
+    setTokenRefresher(fn){ onTokenExpired = fn; },
+    /* طلب REST عام على أي جدول (profiles / invites) بتوكن المستخدم */
+    async rest(path, opts){
+      if(!cloud) throw new Error('no cloud');
+      const o = Object.assign({}, opts || {});
+      o.headers = Object.assign({}, cloudHeaders(), o.headers || {});
+      const r = await authedFetch(cloud.url + '/rest/v1/' + path, o);
+      const txt = await r.text();
+      if(!r.ok) throw new Error(r.status + ' ' + txt.slice(0, 200));
+      return txt ? JSON.parse(txt) : null;
+    },
+    /* طلب على نظام المصادقة نفسه */
+    async auth(path, body, method){
+      if(!cloud) throw new Error('no cloud');
+      const r = await fetch(cloud.url + '/auth/v1/' + path, {
+        method: method || 'POST',
+        headers: cloudHeaders(),
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const txt = await r.text();
+      let j = null;
+      try{ j = txt ? JSON.parse(txt) : null; }catch(e){}
+      if(!r.ok){
+        const msg = (j && (j.error_description || j.msg || j.message || j.error)) || ('HTTP ' + r.status);
+        const err = new Error(msg); err.status = r.status; err.body = j;
+        throw err;
+      }
+      return j;
+    },
+    detect,
+    retryCloud,
+    async get(key){
+      try{
+        if(mode === 'cloud'){
+          try{
+            const v = await cloudGet(key);
+            if(v !== null) localSet(key, v);      /* نسخة محلية للأوفلاين */
+            return v;
+          }catch(e){
+            if(!isAuthError(e)) mode = 'cloud-offline';
+            return await localGet(key);
+          }
+        }
+        if(mode === 'cloud-offline') return await localGet(key);
+        if(mode === 'artifact'){
+          const r = await window.storage.get(key, true);
+          return r && r.value ? r.value : null;
+        }
+        return await localGet(key);
+      }catch(e){ console.error('store.get', key, e); return null; }
+    },
+    async set(key, value){
+      try{
+        if(mode === 'cloud' || mode === 'cloud-offline'){
+          await localSet(key, value);             /* الحفظ المحلي الأول دايماً */
+          try{
+            await cloudSet(key, value);
+            mode = 'cloud'; pendingSync = false;
+            return true;
+          }catch(e){
+            if(isAuthError(e)){
+              console.warn('cloud set denied (not signed in)', e.message);
+              return true;                        /* اتحفظت محلياً */
+            }
+            mode = 'cloud-offline'; pendingSync = true;
+            return true;                          /* اتحفظت محلياً — هترفع لما النت يرجع */
+          }
+        }
+        if(mode === 'artifact'){ await window.storage.set(key, value, true); return true; }
+        return await localSet(key, value);
+      }catch(e){ console.error('store.set', key, e); return false; }
+    },
+    /* رفع كل البيانات المحلية للسحابة — بيتنادى لما النت يرجع */
+    async pushLocal(keys){
+      if(!cloud) return false;
+      let ok = true;
+      for(const k of keys){
+        const v = await localGet(k);
+        if(v == null) continue;
+        try{ await cloudSet(k, v); }catch(e){ ok = false; }
+      }
+      if(ok){ pendingSync = false; mode = 'cloud'; }
+      return ok;
+    },
+    async testCloud(url, key){
+      const prev = cloud;
+      cloud = {url: String(url).replace(/\/+$/,''), key: String(key)};
+      try{
+        const r = await fetch(cloud.url + '/rest/v1/crm_kv?select=key&limit=1', {headers: cloudHeaders()});
+        const txt = await r.text();
+        /* 401/403 = السيرفر شغال والحماية مفعّلة (ده المطلوب) */
+        if(r.ok || r.status === 401 || r.status === 403) return {ok:true, secured: !r.ok};
+        cloud = prev;
+        return {ok:false, error: 'HTTP ' + r.status + ' — ' + txt.slice(0,150)};
+      }catch(e){ cloud = prev; return {ok:false, error: e.message}; }
+    },
+    label(){
+      if(mode === 'cloud')         return 'متصل بقاعدة البيانات المشتركة — كل أجهزة الفريق بتشوف نفس البيانات';
+      if(mode === 'cloud-offline') return 'مفيش اتصال بالسيرفر دلوقتي — بتشتغل محلياً والتعديلات هترفع أول ما النت يرجع';
+      if(mode === 'artifact')      return 'التخزين المشترك مفعّل — البيانات متزامنة بين كل أجهزة الفريق';
+      if(mode === 'idb')           return 'تخزين محلي على هذا الجهاز فقط — خُد نسخة احتياطية بانتظام';
+      return 'تخزين محلي محدود (localStorage) — الملاحظات الصوتية قد لا تُحفَظ';
+    },
+    isShared(){ return mode === 'cloud' || mode === 'artifact'; },
+    isCloud(){ return mode === 'cloud' || mode === 'cloud-offline'; }
+  };
+})();
+
+/* ---------- state ---------- */
+let data = {};
+let accounts = {owner:null, sales:[]};
+let currentUser = null;
+let authMode = 'login';
+let currentSection = null;
+let navStack = [];
+let statsScope = null;
+let exportScope = null;
+let periodMode = 'all';
+let searchTerm = '';
+let statusFilter = 'all';
+let editingId = null;
+let selectedStatus = 'new';
+let autoTimer = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let recording = false;
+let recordStartedAt = 0;
+let recordTicker = null;
+let recordHardStop = null;
+let recordCancelled = false;
+let currentVoiceNotes = [];
+
+/* activity filters */
+let actPeriod = 'today', actAgent = 'all', actMethod = 'all', actSearch = '';
+/* export filters */
+let expStatuses = new Set(), expSections = new Set(), expDedup = true;
+let contactMethodSel = 'call';
+
+const $ = id => document.getElementById(id);
+
+/* ---------- utils ---------- */
+function uid(p){ return (p||'l') + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function genPassword(len){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  const buf = new Uint32Array(len);
+  (window.crypto || {}).getRandomValues ? window.crypto.getRandomValues(buf) : buf.forEach((_,i)=>buf[i]=Math.floor(Math.random()*1e9));
+  for(let i=0;i<len;i++) out += chars[buf[i] % chars.length];
+  return out;
+}
+function fmtDateTime(ts){
+  const d = new Date(ts);
+  const dateStr = d.toLocaleDateString('ar-EG', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const timeStr = d.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+  return dateStr + ' — ' + timeStr;
+}
+function fmtShort(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('ar-EG',{day:'numeric',month:'short'}) + ' ' +
+         d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+}
+function relTime(ts){
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff/60000);
+  if(m < 1)  return 'دلوقتي';
+  if(m < 60) return 'من ' + m + ' دقيقة';
+  const h = Math.floor(m/60);
+  if(h < 24) return 'من ' + h + ' ساعة';
+  const dd = Math.floor(h/24);
+  if(dd === 1) return 'من يوم';
+  if(dd < 30) return 'من ' + dd + ' يوم';
+  const mo = Math.floor(dd/30);
+  return 'من ' + mo + ' شهر';
+}
+function fmtDur(sec){
+  const m = Math.floor(sec/60), s = Math.floor(sec%60);
+  return m + ':' + String(s).padStart(2,'0');
+}
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* توحيد الحروف العربية والأرقام عشان البحث يشتغل صح */
+function normAr(s){
+  return String(s||'')
+    .replace(/[ً-ْـ]/g,'')
+    .replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+    .replace(/\s+/g,' ').trim().toLowerCase();
+}
+function toEnDigits(s){
+  return String(s||'')
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0));
+}
+function digitsOnly(s){ return toEnDigits(s).replace(/\D/g,''); }
+/* المفتاح اللي بنقارن بيه رقمين لو نفس الرقم بصيغ مختلفة */
+function phoneKey(phone){
+  let p = digitsOnly(phone);
+  if(p.startsWith('0020')) p = p.slice(4);
+  else if(p.startsWith('20') && p.length > 11) p = p.slice(2);
+  if(p.startsWith('0')) p = p.slice(1);
+  return p;
+}
+function normalizeForWhatsapp(phone){
+  const k = phoneKey(phone);
+  return k ? ('20' + k) : '';
+}
+function intlPhone(phone){
+  const k = phoneKey(phone);
+  return k ? ('+20' + k) : '';
+}
+/* شكل محلي موحّد 01xxxxxxxxx مهما كانت الصيغة المسجلة */
+function localPhone(phone){
+  const k = phoneKey(phone);
+  return k ? ('0' + k) : toEnDigits(phone);
+}
+function telHref(phone){ return 'tel:' + toEnDigits(phone).replace(/[^\d+]/g,''); }
+
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.classList.remove('show'), 2200);
+}
+function copyText(text, okMsg){
+  const done = ()=> toast(okMsg || 'اتنسخ ✅');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  }else{ fallbackCopy(text, done); }
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ toast('مقدرتش أنسخ تلقائي — انسخ يدوي من القائمة'); }
+  document.body.removeChild(ta);
+}
+function downloadText(filename, text, mime){
+  const blob = new Blob(['﻿' + text], {type:(mime||'text/plain')+';charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function phoneIcon(){ return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1L6.6 10.8z" fill="currentColor"/></svg>'; }
+function smsIcon(){ return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-4.6 3.5A0.5 0.5 0 0 1 2.6 20V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M7 9h10M7 12.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'; }
+function waIcon(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.3c-.2.7-1.4 1.4-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3.1s.8-2.2 1.1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .5 0 .7.5.3.7.9 2.2 1 2.4.1.2.1.4 0 .6-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.8 1.7.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.2.7-.1.3.1 1.8.9 2.1 1 .3.2.5.2.6.4.1.2.1.9-.1 1.6z" fill="currentColor"/></svg>'; }
+
+/* ================= DATA: load / merge / save ================= */
+function migrate(d){
+  Object.keys(d || {}).forEach(sid=>{
+    if(!Array.isArray(d[sid])){ d[sid] = []; return; }
+    d[sid].forEach(l=>{
+      if(!Array.isArray(l.history)) l.history = [];
+      l.history.forEach(h=>{ if(!h.id) h.id = uid('h'); });
+      if(!Array.isArray(l.noteItems)){
+        l.noteItems = [];
+        if((l.notes||'').trim()){
+          l.noteItems.push({
+            id: uid('n'),
+            by: l.createdBy || (l.history[0] && l.history[0].by) || 'غير معروف',
+            at: l.createdAt || Date.now(),
+            text: l.notes
+          });
+        }
+      }
+      if(!l.createdBy) l.createdBy = (l.history[0] && l.history[0].by) || '';
+      if(typeof l.voiceCount !== 'number') l.voiceCount = 0;
+      /* بيانات قديمة: نستنتج مين اللي كمّل الحجز من سجل تغيير الحالة */
+      if(l.status === 'booked' && !l.bookedBy){
+        const ev = l.history.filter(h=>!h.deleted && h.method==='status' && h.detail==='تم الحجز').slice(-1)[0];
+        l.bookedBy = ev ? ev.by : (l.createdBy || '');
+        l.bookedAt = ev ? ev.at : (l.updatedAt || l.createdAt);
+      }
+      if(l.status !== 'booked' && l.bookedBy){ l.bookedBy = null; l.bookedAt = null; }
+      if(!l.createdAt) l.createdAt = l.updatedAt || Date.now();
+      if(!l.updatedAt) l.updatedAt = l.createdAt;
+    });
+  });
+  return d || {};
+}
+function mergeById(a, b){
+  const m = new Map();
+  [...(a||[]), ...(b||[])].forEach(it=>{
+    if(!it) return;
+    const k = it.id || uid('x');
+    const prev = m.get(k);
+    /* لو الاتنين موجودين، المحذوف بيغلب عشان الحذف ميرجعش تاني */
+    if(prev) m.set(k, {...prev, ...it, deleted: prev.deleted || it.deleted});
+    else m.set(k, it);
+  });
+  return [...m.values()].sort((x,y)=> (x.at||0) - (y.at||0));
+}
+function mergeLead(a, b){
+  const newer = (b.updatedAt||0) >= (a.updatedAt||0) ? b : a;
+  const older = newer === b ? a : b;
+  const out = {...older, ...newer};
+  out.history   = mergeById(a.history,   b.history);
+  out.noteItems = mergeById(a.noteItems, b.noteItems);
+  out.voiceCount = Math.max(a.voiceCount||0, b.voiceCount||0);
+  out.deletedAt = a.deletedAt || b.deletedAt || null;
+  return out;
+}
+/* دمج نسخة السيرفر مع النسخة المحلية عشان تعديلات زميل تاني ماتضيعش */
+function mergeData(remote, local){
+  const out = {};
+  const keys = new Set([...Object.keys(remote||{}), ...Object.keys(local||{})]);
+  keys.forEach(sid=>{
+    const map = new Map();
+    (remote[sid]||[]).forEach(l => map.set(l.id, l));
+    (local[sid]||[]).forEach(l=>{
+      const ex = map.get(l.id);
+      map.set(l.id, ex ? mergeLead(ex, l) : l);
+    });
+    out[sid] = [...map.values()];
+  });
+  return out;
+}
+async function rawLoad(){
+  const raw = await Store.get(LEADS_KEY);
+  if(!raw) return {};
+  try{ return migrate(JSON.parse(raw)); }catch(e){ return {}; }
+}
+async function loadData(){ return await rawLoad(); }
+async function saveData(){
+  const remote = await rawLoad();
+  data = mergeData(remote, data);
+  const ok = await Store.set(LEADS_KEY, JSON.stringify(data));
+  if(!ok) toast('⚠️ فشل الحفظ — المساحة ممكن تكون امتلت');
+  return ok;
+}
+async function loadAccounts(){
+  /* في وضع السحابة الحسابات في Supabase Auth مش في ملف البيانات */
+  if(typeof cloudAuthActive === 'function' && cloudAuthActive()) return {owner:null, sales:[]};
+  const raw = await Store.get(ACCOUNTS_KEY);
+  if(!raw) return {owner:null, sales:[]};
+  try{ const a = JSON.parse(raw); if(!a.sales) a.sales = []; return a; }
+  catch(e){ return {owner:null, sales:[]}; }
+}
+async function saveAccounts(){
+  if(cloudAuthActive()) return true;
+  return await Store.set(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+/* ---------- الأقسام (الدورات) ---------- */
+async function loadSections(){
+  const raw = await Store.get(SECTIONS_KEY);
+  let stored = [];
+  try{ stored = raw ? JSON.parse(raw) : []; }catch(e){ stored = []; }
+  if(!Array.isArray(stored)) stored = [];
+  const map = new Map(stored.map(s=>[s.id, s]));
+  /* أي دورة أساسية جديدة في تحديثات البرنامج تتضاف تلقائياً */
+  DEFAULT_SECTIONS.forEach(d=>{ if(!map.has(d.id)) map.set(d.id, {...d}); });
+  allSectionRecords = [...map.values()];
+  SECTIONS = allSectionRecords.filter(s=>!s.deleted);
+  rebuildSectionMap();
+  return SECTIONS;
+}
+async function saveSections(){
+  const map = new Map(allSectionRecords.map(s=>[s.id, s]));
+  SECTIONS.forEach(s => map.set(s.id, s));
+  allSectionRecords = [...map.values()];
+  rebuildSectionMap();
+  return await Store.set(SECTIONS_KEY, JSON.stringify(allSectionRecords));
+}
+
+/* ---------- إعدادات البونص ---------- */
+let settings = {pointsPerBooking:1, pointValue:0, currency:'جنيه'};
+async function loadSettings(){
+  const raw = await Store.get(SETTINGS_KEY);
+  try{ if(raw) settings = Object.assign(settings, JSON.parse(raw)); }catch(e){}
+  return settings;
+}
+async function saveSettings(){ return await Store.set(SETTINGS_KEY, JSON.stringify(settings)); }
+async function loadVoiceNotes(leadId){
+  const raw = await Store.get(VOICE_PREFIX + leadId);
+  if(!raw) return [];
+  try{ const arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; }
+  catch(e){ return []; }
+}
+async function saveVoiceNotes(leadId, arr){ return await Store.set(VOICE_PREFIX + leadId, JSON.stringify(arr)); }
+
+/* كل الليدز غير المحذوفة */
+function allLeads(){
+  const out = [];
+  Object.keys(data).forEach(sid=>{
+    (data[sid]||[]).forEach(l=>{ if(!l.deletedAt) out.push({...l, _sec: sid}); });
+  });
+  return out;
+}
+function sectionLeads(sid){ return (data[sid]||[]).filter(l=>!l.deletedAt); }
+function findLead(id){
+  for(const sid of Object.keys(data)){
+    const l = (data[sid]||[]).find(x=>x.id===id);
+    if(l) return {lead:l, sec:sid};
+  }
+  return null;
+}
+function lastContactOf(lead){
+  const hist = (lead.history||[]).filter(h=>!h.deleted && CONTACT_METHODS.includes(h.method));
+  if(!hist.length) return null;
+  return hist.reduce((a,b)=> (b.at||0) > (a.at||0) ? b : a);
+}
+function agentNames(){
+  const set = new Set();
+  if(cloudAuthActive()){
+    (cloudProfiles||[]).forEach(p=>{ if(p.username) set.add(p.username); });
+    if(currentUser) set.add(currentUser.username);
+  }else{
+    if(accounts.owner) set.add(accounts.owner.username);
+    (accounts.sales||[]).forEach(a=>set.add(a.username));
+  }
+  allLeads().forEach(l=>{ (l.history||[]).forEach(h=>{ if(h.by) set.add(h.by); }); });
+  return [...set];
+}
+
+/* ================= المصادقة السحابية (Supabase Auth) =================
+   البيانات محمية على مستوى قاعدة البيانات نفسها:
+   • مفيش قراءة أو كتابة من غير تسجيل دخول حقيقي
+   • محدش يقدر يعمل حساب إلا لو المالك بعتله دعوة
+   • دخول أوفلاين ببصمة مشفّرة محفوظة على الجهاز
+====================================================================== */
+const SESSION_KEY = 'crm-session';
+const OFFLINE_AUTH_KEY = 'crm-offline-auth';
+
+async function sha256Hex(str){
+  if(!(window.crypto && window.crypto.subtle)) return null;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function randomSalt(){
+  const a = new Uint8Array(16);
+  (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(a) : a.forEach((_,i)=>a[i]=Math.floor(Math.random()*256));
+  return [...a].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+const CloudAuth = {
+  session: null,          /* {access_token, refresh_token, expires_at, user} */
+  profile: null,          /* {id, username, role, email} */
+
+  loadSession(){
+    try{
+      const raw = localStorage.getItem(SESSION_KEY);
+      this.session = raw ? JSON.parse(raw) : null;
+    }catch(e){ this.session = null; }
+    if(this.session && this.session.access_token) Store.setAuthToken(this.session.access_token);
+    return this.session;
+  },
+  saveSession(s){
+    this.session = s;
+    Store.setAuthToken(s ? s.access_token : null);
+    try{
+      if(s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      else localStorage.removeItem(SESSION_KEY);
+    }catch(e){}
+  },
+  _shape(r){
+    return {
+      access_token: r.access_token,
+      refresh_token: r.refresh_token,
+      expires_at: Date.now() + ((r.expires_in || 3600) * 1000),
+      user: r.user || null
+    };
+  },
+
+  async signIn(email, password){
+    const r = await Store.auth('token?grant_type=password', {email: email.trim().toLowerCase(), password});
+    this.saveSession(this._shape(r));
+    /* لو مقدرناش نجيب البروفايل يبقى الحساب موقوف أو مالوش صلاحية —
+       بنرجّع null والواجهة بتوضّح السبب بدل ما نرمي خطأ غامض */
+    try{ await this.fetchProfile(); }
+    catch(e){ this.profile = null; }
+    if(this.profile && this.profile.role !== 'disabled'){
+      await this.cacheOffline(email, password);
+    }
+    return this.profile;
+  },
+  /* المالك بيعمل حساب للسيلز — من غير ما يخرج هو من حسابه،
+     لأن التوكنات محفوظة عندنا مش في مكتبة خارجية */
+  async createUser(email, password, username){
+    const myToken = this.session ? this.session.access_token : null;
+    Store.setAuthToken(null);                 /* التسجيل بيتم بمفتاح anon */
+    try{
+      const r = await Store.auth('signup', {
+        email: email.trim().toLowerCase(),
+        password,
+        data: {username}
+      });
+      return r;
+    }finally{
+      Store.setAuthToken(myToken);            /* نرجّع جلسة المالك زي ما هي */
+    }
+  },
+  /* بنجدد التوكن قبل ما يخلص بخمس دقايق.
+     مهم لأن Postgres بيرجّع قايمة فاضية (مش خطأ) لو الجلسة انتهت،
+     فلو استنينا الخطأ مش هييجي والمستخدم هيشوف البرنامج فاضي. */
+  async ensureFresh(){
+    if(!this.session || !this.session.access_token) return false;
+    if(this.session.expires_at && this.session.expires_at - Date.now() > 5*60*1000) return true;
+    return await this.refreshSession();
+  },
+  async refreshSession(){
+    if(!this.session || !this.session.refresh_token) return false;
+    const rt = this.session.refresh_token;
+    Store.setAuthToken(null);
+    try{
+      const r = await Store.auth('token?grant_type=refresh_token', {refresh_token: rt});
+      this.saveSession(this._shape(r));
+      return true;
+    }catch(e){
+      Store.setAuthToken(this.session ? this.session.access_token : null);
+      return false;
+    }
+  },
+  async fetchProfile(){
+    const rows = await Store.rest('profiles?select=id,username,role,email&limit=1');
+    this.profile = (rows && rows[0]) || null;
+    return this.profile;
+  },
+  async changeMyPassword(newPass){
+    await Store.auth('user', {password: newPass}, 'PUT');
+    return true;
+  },
+  async signOut(){
+    try{ await Store.auth('logout', {}); }catch(e){}
+    this.saveSession(null);
+    this.profile = null;
+    try{ localStorage.removeItem(OFFLINE_AUTH_KEY); }catch(e){}
+  },
+
+  /* ---- الدخول من غير نت ---- */
+  async cacheOffline(email, password){
+    if(!this.profile) return;
+    const salt = randomSalt();
+    const hash = await sha256Hex(salt + ':' + password);
+    if(!hash) return;
+    try{
+      localStorage.setItem(OFFLINE_AUTH_KEY, JSON.stringify({
+        email: email.trim().toLowerCase(),
+        salt, hash,
+        username: this.profile.username,
+        role: this.profile.role,
+        id: this.profile.id,
+        at: Date.now()
+      }));
+    }catch(e){}
+  },
+  async offlineSignIn(email, password){
+    let c = null;
+    try{ c = JSON.parse(localStorage.getItem(OFFLINE_AUTH_KEY) || 'null'); }catch(e){}
+    if(!c) return {ok:false, reason:'no-cache'};
+    if(c.email !== email.trim().toLowerCase()) return {ok:false, reason:'no-cache'};
+    const hash = await sha256Hex(c.salt + ':' + password);
+    if(!hash || hash !== c.hash) return {ok:false, reason:'bad-password'};
+    this.profile = {id: c.id, username: c.username, role: c.role, email: c.email};
+    return {ok:true, profile: this.profile};
+  }
+};
+/* لو التوكن خلص أثناء الاستخدام، نجدده تلقائياً */
+Store.setTokenRefresher(()=> CloudAuth.refreshSession());
+
+/* ================= AUTH ================= */
+/* في وضع السحابة الدخول بالإيميل عبر Supabase Auth،
+   وفي الوضع المحلي بالحسابات المخزنة على الجهاز */
+function cloudAuthActive(){ return Store.hasCloudConfig(); }
+
+function renderAuthScreen(){
+  const cloudy = cloudAuthActive();
+  $('authUsername').type = cloudy ? 'email' : 'text';
+  $('authUsername').placeholder = cloudy ? 'name@example.com' : 'username';
+  $('authUserLabel').textContent = cloudy ? 'البريد الإلكتروني' : 'اسم المستخدم';
+  $('authOwnerLink').style.display = cloudy ? 'block' : 'none';
+  $('authNameWrap').style.display = 'none';
+
+  if(cloudy){
+    authMode = 'cloud-login';
+    $('authSub').textContent = 'نظام متابعة المتقدمين — سجّل دخولك بالبريد وكلمة المرور اللي وصلتك من المالك';
+    $('authConfirmWrap').style.display = 'none';
+    $('authBtn').textContent = 'دخول';
+  }else if(!accounts.owner){
+    authMode = 'setup';
+    $('authSub').textContent = 'أول مرة تفتح فيها النظام — اعمل حساب المالك بتاعك (اسم مستخدم وكلمة مرور تختارهم انت). من حساب المالك ده تقدر تنشئ حسابات فريق المبيعات.';
+    $('authConfirmWrap').style.display = 'block';
+    $('authBtn').textContent = 'إنشاء حساب المالك';
+  }else{
+    authMode = 'login';
+    $('authSub').textContent = 'نظام متابعة المتقدمين — سجّل دخولك بحسابك';
+    $('authConfirmWrap').style.display = 'none';
+    $('authBtn').textContent = 'دخول';
+  }
+  $('authUsername').value = '';
+  $('authPassword').value = '';
+  $('authPasswordConfirm').value = '';
+  $('authDisplayName').value = '';
+  $('authError').style.display = 'none';
+}
+/* وضع «إنشاء حساب المالك» على سيرفر جديد — بيشتغل مرة واحدة بس */
+function switchToOwnerSetup(){
+  authMode = 'cloud-setup';
+  $('authSub').textContent = 'إنشاء حساب المالك على السيرفر. لازم تكون ضفت إيميلك في جدول الدعوات من لوحة Supabase قبل كده.';
+  $('authNameWrap').style.display = 'block';
+  $('authConfirmWrap').style.display = 'block';
+  $('authBtn').textContent = 'إنشاء حساب المالك';
+  $('authOwnerLink').style.display = 'none';
+  $('authError').style.display = 'none';
+}
+function showAuthError(msg){ const el = $('authError'); el.textContent = msg; el.style.display = 'block'; }
+function setAuthBusy(on, txt){
+  $('authBtn').disabled = on;
+  $('authBtn').style.opacity = on ? '0.6' : '1';
+  if(on) $('authBtn').textContent = txt || 'لحظة...';
+}
+
+async function handleAuthSubmit(){
+  const idInput = $('authUsername').value.trim();
+  const password = $('authPassword').value;
+  if(!idInput || !password){ showAuthError('من فضلك اكمل البيانات'); return; }
+  $('authError').style.display = 'none';
+
+  /* ---------- وضع السحابة ---------- */
+  if(authMode === 'cloud-setup'){
+    const name = $('authDisplayName').value.trim();
+    const confirm2 = $('authPasswordConfirm').value;
+    if(!name){ showAuthError('اكتب الاسم اللي هيظهر في التقارير'); return; }
+    if(password.length < 8){ showAuthError('كلمة المرور لازم تكون 8 حروف/أرقام على الأقل'); return; }
+    if(password !== confirm2){ showAuthError('تأكيد كلمة المرور مش مطابق'); return; }
+    setAuthBusy(true, 'جاري الإنشاء...');
+    try{
+      await CloudAuth.createUser(idInput, password, name);
+      const prof = await CloudAuth.signIn(idInput, password);
+      if(!prof){ showAuthError('الحساب اتعمل بس مفيش صلاحيات. راجع كود SQL في الدليل.'); return; }
+      await afterLogin({username: prof.username, role: prof.role, email: prof.email});
+    }catch(e){
+      showAuthError(translateAuthError(e));
+    }finally{ setAuthBusy(false); renderAuthBtnLabel(); }
+    return;
+  }
+  if(authMode === 'cloud-login'){
+    setAuthBusy(true, 'جاري الدخول...');
+    try{
+      const prof = await CloudAuth.signIn(idInput, password);
+      if(!prof){
+        showAuthError('الحساب موجود لكن مالوش صلاحية على البيانات. كلّم المالك.');
+        return;
+      }
+      if(prof.role === 'disabled'){
+        await CloudAuth.signOut();
+        showAuthError('الحساب ده متوقف. كلّم المالك.');
+        return;
+      }
+      await afterLogin({username: prof.username, role: prof.role, email: prof.email});
+    }catch(e){
+      /* مفيش نت؟ نجرب البصمة المحفوظة على الجهاز */
+      if(isNetworkError(e)){
+        const off = await CloudAuth.offlineSignIn(idInput, password);
+        if(off.ok){
+          toast('دخلت بدون نت — التعديلات هترفع لما النت يرجع');
+          await afterLogin({username: off.profile.username, role: off.profile.role, email: off.profile.email});
+          return;
+        }
+        showAuthError(off.reason === 'no-cache'
+          ? 'مفيش نت، ولسه ماسجلتش دخول من الجهاز ده قبل كده. لازم أول دخول يكون والنت شغال.'
+          : 'كلمة المرور غلط');
+        return;
+      }
+      showAuthError(translateAuthError(e));
+    }finally{ setAuthBusy(false); renderAuthBtnLabel(); }
+    return;
+  }
+
+  /* ---------- الوضع المحلي (من غير سيرفر) ---------- */
+  if(authMode === 'setup'){
+    const confirm2 = $('authPasswordConfirm').value;
+    if(password.length < 4){ showAuthError('كلمة المرور لازم تكون 4 حروف/أرقام على الأقل'); return; }
+    if(password !== confirm2){ showAuthError('تأكيد كلمة المرور مش مطابق'); return; }
+    accounts.owner = {username: idInput, password};
+    await saveAccounts();
+    await afterLogin({username: idInput, role:'owner'});
+    return;
+  }
+  if(accounts.owner && accounts.owner.username === idInput && accounts.owner.password === password){
+    await afterLogin({username: idInput, role:'owner'}); return;
+  }
+  const agent = (accounts.sales||[]).find(a=>a.username===idInput && a.password===password);
+  if(agent){ await afterLogin({username: idInput, role:'sales'}); return; }
+  showAuthError('اسم المستخدم أو كلمة المرور غلط');
+}
+function renderAuthBtnLabel(){
+  $('authBtn').textContent = (authMode === 'cloud-setup' || authMode === 'setup') ? 'إنشاء حساب المالك' : 'دخول';
+}
+function isNetworkError(e){
+  return e instanceof TypeError || /Failed to fetch|NetworkError|load failed/i.test(e.message || '');
+}
+function translateAuthError(e){
+  const m = (e && e.message) || '';
+  if(/Invalid login credentials/i.test(m)) return 'البريد أو كلمة المرور غلط';
+  if(/Email not confirmed/i.test(m))       return 'الحساب محتاج تأكيد بالإيميل. من لوحة Supabase اقفل خيار Confirm email.';
+  if(/already registered|already been registered/i.test(m)) return 'البريد ده مسجل بالفعل';
+  if(/التسجيل مسموح/.test(m))              return 'البريد ده مش مدعو. المالك لازم يضيفه الأول.';
+  if(/Password should be/i.test(m))        return 'كلمة المرور ضعيفة — خليها 8 حروف/أرقام على الأقل';
+  if(/rate limit|too many/i.test(m))       return 'محاولات كتير في وقت قصير. استنى شوية وجرّب تاني.';
+  return 'حصل خطأ: ' + m;
+}
+
+async function afterLogin(user){
+  currentUser = user;
+  $('loginView').style.display = 'none';
+  $('appTopbar').style.display = 'block';
+  $('userBarText').textContent = (user.role==='owner' ? '👑 المالك' : '👤 السيلز') + ' — ' + user.username;
+  $('ownerPanelBtn').style.display = user.role==='owner' ? 'inline-flex' : 'none';
+  $('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  /* أسماء الفريق بتيجي من جدول الحسابات عشان الفلاتر والتقارير */
+  if(cloudAuthActive() && Store.mode === 'cloud'){
+    try{ cloudProfiles = await Store.rest('profiles?select=id,username,role,email') || []; }
+    catch(e){ cloudProfiles = []; }
+  }
+  await loadSections();
+  await loadSettings();
+  data = await loadData();
+  navStack = [{view:'homeView'}];
+  applyView();
+  startAutoRefresh();
+}
+async function logout(){
+  stopAutoRefresh();
+  stopChatPolling();
+  if(cloudAuthActive()){
+    if(!confirm('هيتم تسجيل الخروج ومسح بيانات الدخول من الجهاز ده.\nهتحتاج نت عشان تدخل تاني. تكمّل؟')) {
+      startAutoRefresh(); return;
+    }
+    await CloudAuth.signOut();
+  }
+  chatMessages = []; chatLastAt = null; chatUnread = 0; chatAttach = null;
+  currentUser = null; currentSection = null; navStack = [];
+  ['appTopbar','homeView','sectionView','statsView','activityView','exportView','importView','ownerView','pointsView','chatView','fabBtn']
+    .forEach(id => $(id).style.display = 'none');
+  $('loginView').style.display = 'flex';
+  renderAuthScreen();
+}
+function isOwner(){ return currentUser && currentUser.role === 'owner'; }
+
+/* ================= NAVIGATION ================= */
+const VIEW_IDS = ['homeView','sectionView','statsView','activityView','exportView','importView','ownerView','pointsView','chatView'];
+function pushView(entry){ navStack.push(entry); applyView(); }
+function popView(){ if(navStack.length > 1){ navStack.pop(); applyView(); } }
+function currentEntry(){ return navStack[navStack.length-1] || {view:'homeView'}; }
+function applyView(){
+  const e = currentEntry();
+  if(e.view !== 'chatView') stopChatPolling();
+  VIEW_IDS.forEach(id => $(id).style.display = (id === e.view) ? (id === 'chatView' ? 'flex' : 'block') : 'none');
+  $('backBtn').style.display = navStack.length > 1 ? 'flex' : 'none';
+  $('fabBtn').style.display = (e.view === 'sectionView' || e.view === 'homeView') ? 'flex' : 'none';
+
+  let title = 'المعهد الأوليمبي الدولي لعلوم الرياضة';
+  let sub   = 'متابعة المتقدمين للدورات التدريبية';
+
+  if(e.view === 'homeView'){ $('homeView').style.display = 'block'; renderHome(); }
+  else if(e.view === 'sectionView'){
+    currentSection = e.section;
+    const sec = sectionMap[e.section];
+    title = sec ? sec.name : 'القسم'; sub = 'قائمة المتقدمين للتواصل';
+    renderFilters(); renderLeads();
+  }
+  else if(e.view === 'statsView'){
+    statsScope = e.scope || null;
+    if(statsScope){ title = 'إحصائيات: ' + (sectionMap[statsScope]||{}).name; sub = 'نسب الرد والاهتمام والحجز لهذه الدورة'; }
+    else { title = 'الإحصائيات العامة'; sub = 'أداء كل الدورات مجمّعاً'; }
+    $('periodRow').style.display = statsScope ? 'none' : 'flex';
+    $('statsBreakdownWrap').style.display = statsScope ? 'none' : 'block';
+    $('statsAgentsWrap').style.display = 'block';
+    renderStats();
+  }
+  else if(e.view === 'activityView'){
+    title = 'سجل التواصل'; sub = 'مين تواصل مع مين — وإمتى وبأي طريقة';
+    renderActivityFilters(); renderActivity();
+  }
+  else if(e.view === 'exportView'){
+    exportScope = e.scope || null;
+    title = 'تصدير أرقام الهواتف'; sub = 'فلترة الأرقام ونسخها أو تنزيلها';
+    renderExportFilters(); renderExport();
+  }
+  else if(e.view === 'importView'){ title = 'استيراد أرقام'; sub = 'إضافة دفعة أرقام لقسم معيّن'; renderImport(); }
+  else if(e.view === 'chatView'){
+    title = 'شات الفريق';
+    sub = chatAvailable() ? 'رسايل بتوصل لكل السيلز' : 'محتاج قاعدة البيانات المشتركة';
+    openChat();
+  }
+  else if(e.view === 'pointsView'){
+    title = 'لوحة الترتيب والبونص'; sub = 'نقطة لكل حجز تكمّله مع العميل';
+    $('pointsRules').innerHTML =
+      'النقاط بتتحسب للسيلز اللي يكمّل مع المتقدم لحد ما يحوّل حالته لـ «تم الحجز».<br>' +
+      'كل حجز مكتمل = <b>' + (settings.pointsPerBooking||1) + '</b> نقطة' +
+      (settings.pointValue ? ' — النقطة = <b>' + settings.pointValue + '</b> ' + escapeHtml(settings.currency) : '');
+    renderPoints();
+  }
+  else if(e.view === 'ownerView'){
+    title = 'إدارة حسابات فريق المبيعات'; sub = 'الحسابات والربط وإعدادات البونص';
+    renderCloudPanel();
+    $('setPointsPer').value  = settings.pointsPerBooking || 1;
+    $('setPointValue').value = settings.pointValue || 0;
+    $('setCurrency').value   = settings.currency || 'جنيه';
+    renderSalesAccounts();
+  }
+
+  $('headerTitle').textContent = title;
+  $('headerSub').textContent = sub;
+}
+
+/* ================= OWNER PANEL ================= */
+/* ---------- حسابات السحابة (Supabase Auth) ---------- */
+let cloudProfiles = [];
+async function renderCloudAccounts(){
+  const wrap = $('salesAccountsList');
+  wrap.innerHTML = '<div style="font-size:12px;color:var(--muted);">جاري تحميل الحسابات...</div>';
+  try{
+    cloudProfiles = await Store.rest('profiles?select=id,username,role,email&order=created_at.asc') || [];
+  }catch(e){
+    wrap.innerHTML = '<div style="font-size:12.5px;color:var(--danger);">مقدرناش نحمّل الحسابات: ' + escapeHtml(e.message) + '</div>';
+    return;
+  }
+  if(!cloudProfiles.length){
+    wrap.innerHTML = '<div class="empty-state" style="padding:24px 10px;"><p>مفيش حسابات لسه.</p></div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  cloudProfiles.forEach(p=>{
+    const isMe = CloudAuth.profile && p.id === CloudAuth.profile.id;
+    const roleLabel = p.role === 'owner' ? '👑 مالك' : (p.role === 'disabled' ? '🚫 موقوف' : '👤 سيلز');
+    const row = document.createElement('div');
+    row.className = 'account-row';
+    row.innerHTML =
+      '<div class="account-info">' +
+        '<b>' + escapeHtml(p.username) + '</b>' +
+        '<div style="font-size:11px;margin-top:2px;" class="ltr">' + escapeHtml(p.email || '') + '</div>' +
+        '<div style="font-size:11px;margin-top:2px;">' + roleLabel + (isMe ? ' — أنت' : '') + '</div>' +
+      '</div>' +
+      (isMe || p.role === 'owner' ? '' :
+        '<div class="account-actions"><button class="account-del" title="' +
+        (p.role === 'disabled' ? 'إعادة تفعيل' : 'إيقاف الحساب') + '">' +
+        (p.role === 'disabled' ? '↺' : '✕') + '</button></div>');
+    const btn = row.querySelector('.account-del');
+    if(btn) btn.onclick = ()=> toggleAccountDisabled(p);
+    wrap.appendChild(row);
+  });
+}
+async function toggleAccountDisabled(p){
+  const disabling = p.role !== 'disabled';
+  const msg = disabling
+    ? 'إيقاف حساب «' + p.username + '»؟\nمش هيقدر يدخل ولا يشوف أي بيانات.\nسجل تواصله القديم هيفضل محفوظ.'
+    : 'إعادة تفعيل حساب «' + p.username + '»؟';
+  if(!confirm(msg)) return;
+  try{
+    await Store.rest('profiles?id=eq.' + encodeURIComponent(p.id), {
+      method: 'PATCH',
+      headers: {'Prefer': 'return=minimal'},
+      body: JSON.stringify({role: disabling ? 'disabled' : 'sales'})
+    });
+    toast(disabling ? 'اتوقف الحساب' : 'اتفعّل الحساب');
+    renderCloudAccounts();
+  }catch(e){ alert('فشل التعديل: ' + e.message); }
+}
+async function createCloudSalesAccount(){
+  const name  = $('newSalesUsername').value.trim();
+  const email = $('newSalesEmail').value.trim().toLowerCase();
+  if(!name){ toast('اكتب اسم السيلز'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('البريد الإلكتروني مش صحيح'); return; }
+  const password = genPassword(10);
+  const btn = $('createSalesBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+  try{
+    /* 1) دعوة على مستوى قاعدة البيانات — من غيرها التسجيل بيترفض */
+    await Store.rest('invites', {
+      method: 'POST',
+      headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify([{email, username: name, role: 'sales', used: false}])
+    });
+    /* 2) إنشاء الحساب فعلياً */
+    await CloudAuth.createUser(email, password, name);
+    const box = $('newAccountResult');
+    box.style.display = 'block';
+    box.innerHTML = 'اتعمل الحساب بنجاح. ابعت البيانات دي للسيلز:' +
+      '<br><span class="ltr">' + escapeHtml(email) + '</span>' +
+      '<div class="pass-box ltr">' + escapeHtml(password) + '</div>' +
+      '<button class="btn btn-ghost btn-sm" id="copyCredsBtn" style="margin-top:8px;">📋 نسخ البيانات</button>';
+    $('copyCredsBtn').onclick = ()=> copyText(
+      'بيانات دخولك على نظام متابعة المتقدمين:\n' +
+      'الرابط: ' + location.origin + location.pathname + '\n' +
+      'البريد: ' + email + '\n' +
+      'كلمة المرور: ' + password, 'اتنسخت البيانات ✅');
+    $('newSalesUsername').value = '';
+    $('newSalesEmail').value = '';
+    renderCloudAccounts();
+  }catch(e){
+    alert('فشل إنشاء الحساب:\n' + translateAuthError(e));
+  }finally{
+    btn.disabled = false; btn.textContent = 'توليد كلمة مرور وإنشاء الحساب';
+  }
+}
+async function changeMyPassword(){
+  const np = $('myNewPass').value;
+  if(np.length < 8){ toast('كلمة المرور لازم 8 حروف/أرقام على الأقل'); return; }
+  try{
+    await CloudAuth.changeMyPassword(np);
+    $('myNewPass').value = '';
+    toast('اتغيّرت كلمة المرور ✅ — سجّل دخول تاني من الأجهزة التانية');
+  }catch(e){ alert('فشل التغيير: ' + translateAuthError(e)); }
+}
+
+function renderSalesAccounts(){
+  const cloudy = cloudAuthActive();
+  $('newSalesEmailWrap').style.display = cloudy ? 'block' : 'none';
+  $('myPassWrap').style.display = cloudy ? 'block' : 'none';
+  $('newSalesUsername').placeholder = cloudy ? 'مثال: أحمد محمد' : 'مثال: ahmed_sales';
+  if(cloudy){ renderCloudAccounts(); return; }
+
+  const wrap = $('salesAccountsList');
+  wrap.innerHTML = '';
+  const list = accounts.sales || [];
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty-state" style="padding:24px 10px;"><p>لسه معملتش أي حساب سيلز. أضف أول حساب من فوق.</p></div>';
+    return;
+  }
+  list.forEach(a=>{
+    const row = document.createElement('div');
+    row.className = 'account-row';
+    row.innerHTML =
+      '<div class="account-info"><b>'+escapeHtml(a.username)+'</b><span class="pass ltr">'+escapeHtml(a.password)+'</span></div>' +
+      '<div class="account-actions">' +
+        '<button class="account-key" title="كلمة مرور جديدة">🔑</button>' +
+        '<button class="account-del" title="حذف">✕</button>' +
+      '</div>';
+    row.querySelector('.account-key').onclick = async ()=>{
+      const np = genPassword(6);
+      a.password = np;
+      await saveAccounts();
+      renderSalesAccounts();
+      toast('كلمة المرور الجديدة: ' + np);
+    };
+    row.querySelector('.account-del').onclick = async ()=>{
+      if(!confirm('متأكد إنك عايز تحذف حساب "' + a.username + '"؟\nسجل تواصله القديم هيفضل محفوظ.')) return;
+      accounts.sales = accounts.sales.filter(x=>x.username!==a.username);
+      await saveAccounts();
+      renderSalesAccounts();
+    };
+    wrap.appendChild(row);
+  });
+}
+async function createSalesAccount(){
+  if(cloudAuthActive()) return await createCloudSalesAccount();
+  const username = $('newSalesUsername').value.trim();
+  if(!username){ toast('اكتب اسم مستخدم للسيلز الجديد'); return; }
+  if(accounts.owner && accounts.owner.username === username){ toast('الاسم ده مستخدم لحساب المالك'); return; }
+  if((accounts.sales||[]).some(a=>a.username===username)){ toast('اسم المستخدم ده موجود بالفعل'); return; }
+  const password = genPassword(6);
+  if(!accounts.sales) accounts.sales = [];
+  accounts.sales.push({username, password, createdAt: Date.now()});
+  await saveAccounts();
+  $('newSalesUsername').value = '';
+  const box = $('newAccountResult');
+  box.style.display = 'block';
+  box.innerHTML = 'اتعمل الحساب بنجاح. ابعت البيانات دي للسيلز:<br><span class="ltr">' + escapeHtml(username) + '</span><div class="pass-box ltr">' + escapeHtml(password) + '</div>';
+  renderSalesAccounts();
+}
+
+/* ================= HOME ================= */
+function sectionBadgeInner(sec){
+  if(SECTION_ICONS[sec.id]) return SECTION_ICONS[sec.id];
+  if(sec.icon) return '<span style="font-size:21px;line-height:1;">'+sec.icon+'</span>';
+  return escapeHtml((sec.name||'؟').trim().charAt(0));
+}
+function renderHome(){
+  $('myPointsN').textContent = myPoints();
+  const grid = $('secGrid');
+  grid.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    const leads = sectionLeads(sec.id);
+    const booked = leads.filter(l=>l.status==='booked').length;
+    const noContact = leads.filter(l=>!lastContactOf(l)).length;
+    const card = document.createElement('button');
+    card.className = 'sec-card';
+    card.innerHTML =
+      (isOwner() ? '<span class="sec-edit" title="تعديل الدورة">✎</span>' : '') +
+      '<div class="badge" style="background:'+sec.color+'">'+sectionBadgeInner(sec)+'</div>' +
+      '<div class="sec-name">'+escapeHtml(sec.name)+'</div>' +
+      '<div class="sec-count">👤 <b>'+leads.length+'</b>' +
+        (booked ? '<span class="sep">·</span><span style="color:var(--green)">✅ <b style="color:var(--green)">'+booked+'</b></span>' : '') +
+        (noContact ? '<span class="sep">·</span><span style="color:var(--danger)">⏳ <b style="color:var(--danger)">'+noContact+'</b></span>' : '') +
+      '</div>';
+    card.onclick = ()=> pushView({view:'sectionView', section: sec.id});
+    const ed = card.querySelector('.sec-edit');
+    if(ed) ed.onclick = (e)=>{ e.stopPropagation(); openSectionSheet(sec.id); };
+    grid.appendChild(card);
+  });
+  if(isOwner()){
+    const add = document.createElement('button');
+    add.className = 'add-sec-card';
+    add.innerHTML = '<span class="plus">＋</span>إضافة دورة جديدة';
+    add.onclick = ()=> openSectionSheet(null);
+    grid.appendChild(add);
+  }
+}
+
+/* ================= SECTION LIST ================= */
+function renderFilters(){
+  const row = $('filterRow');
+  const items = [
+    {key:'all', label:'الكل'},
+    {key:'__nocontact', label:'⏳ متواصلناش'},
+    {key:'__contacted', label:'✅ اتواصلنا'},
+    ...STATUSES
+  ];
+  row.innerHTML = '';
+  items.forEach(it=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (statusFilter===it.key ? ' active':'');
+    chip.textContent = it.label;
+    chip.onclick = ()=>{ statusFilter = it.key; renderFilters(); renderLeads(); };
+    row.appendChild(chip);
+  });
+}
+function renderLeads(){
+  const list = $('leadsList');
+  let leads = sectionLeads(currentSection).slice();
+
+  if(statusFilter === '__nocontact')      leads = leads.filter(l=>!lastContactOf(l));
+  else if(statusFilter === '__contacted') leads = leads.filter(l=>!!lastContactOf(l));
+  else if(statusFilter !== 'all')         leads = leads.filter(l => (l.status||'new') === statusFilter);
+
+  if(searchTerm.trim()){
+    const t = normAr(searchTerm), tp = digitsOnly(searchTerm);
+    leads = leads.filter(l => normAr(l.name).includes(t) || (tp && digitsOnly(l.phone).includes(tp)));
+  }
+  leads.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+  $('lastSync').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) +
+    ' — عدد النتائج: ' + leads.length;
+
+  if(leads.length === 0){
+    list.innerHTML = '<div class="empty-state"><div class="big">📋</div><p>لا يوجد متقدمين مطابقين.<br>اضغط على زر (+) عشان تضيف متقدم جديد.</p></div>';
+    return;
+  }
+  list.innerHTML = '';
+  leads.forEach(l=>{
+    const st = statusMap[l.status] || statusMap.new;
+    const initial = (l.name||'؟').trim().charAt(0) || '؟';
+    const lc = lastContactOf(l);
+    const lastNote = (l.noteItems||[]).filter(n=>!n.deleted).slice(-1)[0];
+    const preview = lastNote ? lastNote.text : (l.voiceCount ? '🎙️ ملاحظة صوتية' : '');
+
+    const contactLine = lc
+      ? '<div class="lead-contact-line">📌 آخر تواصل: <b>'+escapeHtml(lc.by)+'</b> · '+
+        escapeHtml((METHOD_LABELS[lc.method]||lc.method))+' · <b>'+fmtShort(lc.at)+'</b> ('+relTime(lc.at)+')</div>'
+      : '<div class="lead-contact-line none">⏳ لسه محدش تواصل مع المتقدم ده</div>';
+
+    const card = document.createElement('div');
+    card.className = 'lead-card';
+    card.innerHTML =
+      '<div class="lead-top">' +
+        '<div class="avatar">'+escapeHtml(initial)+'</div>' +
+        '<div class="lead-info">' +
+          '<div class="lead-name" style="color:'+st.color+'">'+escapeHtml(l.name || 'بدون اسم')+
+            (l.voiceCount ? ' <span style="font-size:11px;">🎙️'+l.voiceCount+'</span>' : '')+'</div>' +
+          '<div class="lead-phone ltr">'+escapeHtml(l.phone || '')+'</div>' +
+          (l.gov ? '<div class="lead-gov">📍 '+escapeHtml(l.gov)+'</div>' : '') +
+        '</div>' +
+        '<div class="lead-actions">' +
+          '<button class="icon-btn call" data-act="call" title="اتصال">'+phoneIcon()+'</button>' +
+          '<button class="icon-btn sms" data-act="sms" title="رسالة SMS">'+smsIcon()+'</button>' +
+          '<button class="icon-btn wa" data-act="wa" title="واتساب">'+waIcon()+'</button>' +
+        '</div>' +
+      '</div>' +
+      contactLine +
+      '<div class="lead-bottom">' +
+        '<span class="status-pill" style="background:'+st.color+'">'+st.label+'</span>' +
+        '<span class="lead-note-preview">'+escapeHtml(preview)+'</span>' +
+      '</div>';
+
+    card.querySelector('[data-act="call"]').onclick = async (e)=>{
+      e.stopPropagation();
+      await logContact(currentSection, l.id, 'call');
+      renderLeads();
+      window.location.href = telHref(l.phone);
+    };
+    card.querySelector('[data-act="sms"]').onclick = async (e)=>{
+      e.stopPropagation();
+      await logContact(currentSection, l.id, 'sms');
+      renderLeads();
+      window.location.href = 'sms:' + toEnDigits(l.phone).replace(/[^\d+]/g,'');
+    };
+    card.querySelector('[data-act="wa"]').onclick = async (e)=>{
+      e.stopPropagation();
+      await logContact(currentSection, l.id, 'wa');
+      renderLeads();
+      window.open('https://wa.me/' + normalizeForWhatsapp(l.phone), '_blank');
+    };
+    card.onclick = ()=> openEditSheet(l.id);
+    list.appendChild(card);
+  });
+}
+async function logContact(sectionId, leadId, method, opts){
+  const arr = data[sectionId]; if(!arr) return;
+  const lead = arr.find(x=>x.id===leadId); if(!lead) return;
+  if(!lead.history) lead.history = [];
+  lead.history.push({
+    id: uid('h'),
+    by: currentUser.username,
+    method,
+    at: (opts && opts.at) || Date.now(),
+    note: (opts && opts.note) || ''
+  });
+  lead.updatedAt = Date.now();
+  await saveData();
+}
+
+/* ================= STATS ================= */
+function leadMatchesPeriod(l){
+  if(periodMode === 'all') return true;
+  const ts = l.updatedAt || l.createdAt || 0;
+  const d = new Date(ts);
+  if(periodMode === 'month'){
+    const val = $('periodMonthInput').value;
+    if(!val) return true;
+    const [y,m] = val.split('-').map(Number);
+    return d.getFullYear() === y && (d.getMonth()+1) === m;
+  }
+  if(periodMode === 'year'){
+    const y = parseInt($('periodYearInput').value, 10);
+    if(!y) return true;
+    return d.getFullYear() === y;
+  }
+  return true;
+}
+function renderStats(){
+  let leads = statsScope ? sectionLeads(statsScope).slice() : allLeads().filter(leadMatchesPeriod);
+  const total = leads.length;
+  const contacted = leads.filter(l=>lastContactOf(l)).length;
+  $('statsTotal').innerHTML =
+    'إجمالي المتقدمين: <b>' + total + '</b> — اتواصلنا مع <b>' + contacted + '</b>' +
+    (total ? ' <span style="font-weight:500;color:var(--muted);font-size:12px;">('+Math.round(contacted/total*100)+'%)</span>' : '');
+
+  const counts = {};
+  STATUSES.forEach(s => counts[s.key] = 0);
+  leads.forEach(l => { const k = l.status || 'new'; counts[k] = (counts[k]||0) + 1; });
+  const rowsWrap = $('statsRows');
+  rowsWrap.innerHTML = '';
+  STATUSES.forEach(s=>{
+    const count = counts[s.key] || 0;
+    const pct = total ? Math.round((count/total)*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML =
+      '<div class="stat-row-top"><div class="stat-label"><span class="stat-dot" style="background:'+s.color+'"></span>'+s.label+'</div>' +
+      '<div class="stat-figures"><b>'+count+'</b> · '+pct+'%</div></div>' +
+      '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:'+pct+'%;background:'+s.color+'"></div></div>';
+    rowsWrap.appendChild(row);
+  });
+
+  renderAgentStats(leads);
+  if(!statsScope) renderBreakdown();
+}
+function renderAgentStats(leads){
+  const wrap = $('statsAgents');
+  const map = {};
+  leads.forEach(l=>{
+    const seen = new Set();
+    (l.history||[]).forEach(h=>{
+      if(h.deleted || !CONTACT_METHODS.includes(h.method)) return;
+      if(!map[h.by]) map[h.by] = {contacts:0, leads:new Set(), booked:new Set()};
+      map[h.by].contacts++;
+      map[h.by].leads.add(l.id);
+      seen.add(h.by);
+    });
+    if(l.status === 'booked'){
+      seen.forEach(by=>{ if(map[by]) map[by].booked.add(l.id); });
+    }
+  });
+  const rows = Object.entries(map).sort((a,b)=> b[1].contacts - a[1].contacts);
+  if(!rows.length){
+    wrap.innerHTML = '<div style="font-size:12.5px;color:var(--muted);padding:6px 4px;">لسه مفيش أي تواصل مسجل.</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(([name,v])=>
+    '<div class="agent-row"><div class="agent-name">👤 '+escapeHtml(name)+'</div>' +
+    '<div class="agent-figs">' +
+      '<span>تواصلات <b>'+v.contacts+'</b></span>' +
+      '<span>عملاء <b>'+v.leads.size+'</b></span>' +
+      '<span style="color:var(--green)">حجوزات <b style="color:var(--green)">'+v.booked.size+'</b></span>' +
+    '</div></div>'
+  ).join('');
+}
+function renderBreakdown(){
+  const wrap = $('statsBreakdown');
+  wrap.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    const leads = sectionLeads(sec.id).filter(leadMatchesPeriod);
+    const total = leads.length;
+    const booked = leads.filter(l=>l.status==='booked').length;
+    const notInterested = leads.filter(l=>l.status==='not_interested').length;
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = '<div class="breakdown-name">'+sec.name+'</div><div class="breakdown-figs">' +
+      '<span style="color:var(--green)">حجز <b>'+booked+'</b></span>' +
+      '<span style="color:#D64545">مش مهتم <b>'+notInterested+'</b></span>' +
+      '<span>الإجمالي <b>'+total+'</b></span></div>';
+    wrap.appendChild(row);
+  });
+}
+
+/* ================= ACTIVITY LOG (المطلب 1) ================= */
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); }
+function actRange(){
+  const now = Date.now();
+  const today0 = startOfDay(now);
+  switch(actPeriod){
+    case 'today':     return [today0, now];
+    case 'yesterday': return [today0 - 86400000, today0];
+    case 'week':      return [today0 - 6*86400000, now];
+    case 'month':     return [today0 - 29*86400000, now];
+    case 'custom': {
+      const f = $('actFrom').value, t = $('actTo').value;
+      const from = f ? new Date(f+'T00:00:00').getTime() : 0;
+      const to   = t ? new Date(t+'T23:59:59').getTime() : now;
+      return [from, to];
+    }
+    default: return [0, now];
+  }
+}
+function renderActivityFilters(){
+  const row = $('actAgentRow');
+  const names = agentNames();
+  row.innerHTML = '';
+  const mk = (key, label)=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (actAgent===key ? ' active':'');
+    b.textContent = label;
+    b.onclick = ()=>{ actAgent = key; renderActivityFilters(); renderActivity(); };
+    row.appendChild(b);
+  };
+  mk('all','الكل');
+  names.forEach(n => mk(n, n));
+}
+function collectActivity(){
+  const [from, to] = actRange();
+  const out = [];
+  const q = normAr(actSearch), qp = digitsOnly(actSearch);
+  allLeads().forEach(l=>{
+    (l.history||[]).forEach(h=>{
+      if(h.deleted) return;
+      if(h.method === 'created') return;
+      if(actMethod !== 'all' && h.method !== actMethod) return;
+      if(actMethod === 'all' && h.method === 'status') { /* مسموح في "الكل" */ }
+      if(actAgent !== 'all' && h.by !== actAgent) return;
+      const at = h.at || 0;
+      if(at < from || at > to) return;
+      if(actSearch.trim()){
+        const okName = normAr(l.name).includes(q);
+        const okPhone = qp && digitsOnly(l.phone).includes(qp);
+        if(!okName && !okPhone) return;
+      }
+      out.push({h, lead:l});
+    });
+  });
+  out.sort((a,b)=> (b.h.at||0) - (a.h.at||0));
+  return out;
+}
+function renderActivity(){
+  const items = collectActivity();
+  const realContacts = items.filter(i => CONTACT_METHODS.includes(i.h.method));
+  const uniqueLeads = new Set(realContacts.map(i=>i.lead.id));
+  $('actTotal').innerHTML =
+    'عدد التواصلات: <b>' + realContacts.length + '</b> — مع <b>' + uniqueLeads.size + '</b> متقدم' +
+    (items.length !== realContacts.length ? ' <span style="font-weight:500;color:var(--muted);font-size:12px;">(+'+(items.length-realContacts.length)+' تغيير حالة)</span>' : '');
+
+  /* ملخص لكل سيلز */
+  const per = {};
+  realContacts.forEach(i=>{
+    if(!per[i.h.by]) per[i.h.by] = {n:0, leads:new Set(), m:{}};
+    per[i.h.by].n++;
+    per[i.h.by].leads.add(i.lead.id);
+    per[i.h.by].m[i.h.method] = (per[i.h.by].m[i.h.method]||0)+1;
+  });
+  const perRows = Object.entries(per).sort((a,b)=>b[1].n-a[1].n);
+  $('actAgentSummary').innerHTML = perRows.length
+    ? perRows.map(([name,v])=>
+        '<div class="agent-row"><div class="agent-name">👤 '+escapeHtml(name)+'</div><div class="agent-figs">' +
+        '<span>تواصلات <b>'+v.n+'</b></span><span>عملاء <b>'+v.leads.size+'</b></span>' +
+        (v.m.call ? '<span>📞 <b>'+v.m.call+'</b></span>' : '') +
+        (v.m.wa   ? '<span>🟢 <b>'+v.m.wa+'</b></span>'   : '') +
+        (v.m.sms  ? '<span>✉️ <b>'+v.m.sms+'</b></span>'  : '') +
+        (v.m.visit? '<span>🤝 <b>'+v.m.visit+'</b></span>': '') +
+        '</div></div>').join('')
+    : '';
+
+  const wrap = $('actList');
+  if(!items.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">🗂️</div><p>مفيش تواصل مسجل في الفترة دي.<br>جرّب توسّع الفترة الزمنية.</p></div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  items.slice(0, 400).forEach(({h, lead})=>{
+    const sec = sectionMap[lead._sec] || {name:'—', color:'#8A93A6'};
+    const label = h.method === 'status'
+      ? '🔄 غيّر الحالة إلى «' + (h.detail||'') + '»'
+      : (METHOD_LABELS[h.method] || h.method);
+    const row = document.createElement('div');
+    row.className = 'act-row';
+    row.innerHTML =
+      '<div class="act-head">' +
+        '<div><div class="act-name">'+escapeHtml(lead.name||'بدون اسم')+'</div>' +
+        '<div class="act-phone ltr">'+escapeHtml(lead.phone||'')+'</div></div>' +
+        '<span class="who-pill">'+escapeHtml(h.by)+'</span>' +
+      '</div>' +
+      '<div class="act-body">' +
+        escapeHtml(label) + '<br>' +
+        '🗓️ <b>'+fmtDateTime(h.at)+'</b> <span style="color:var(--muted)">('+relTime(h.at)+')</span><br>' +
+        '<span style="color:'+sec.color+'">◆</span> '+escapeHtml(sec.name) +
+        (h.note ? '<div class="history-note">📝 '+escapeHtml(h.note)+'</div>' : '') +
+      '</div>';
+    row.onclick = ()=>{
+      pushView({view:'sectionView', section: lead._sec});
+      openEditSheet(lead.id);
+    };
+    wrap.appendChild(row);
+  });
+  if(items.length > 400){
+    const more = document.createElement('div');
+    more.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);padding:10px;';
+    more.textContent = 'معروض أول 400 سجل من إجمالي ' + items.length + ' — ضيّق الفلتر لعرض الباقي.';
+    wrap.appendChild(more);
+  }
+}
+function exportActivityCsv(){
+  const items = collectActivity();
+  if(!items.length){ toast('مفيش سجلات للتصدير'); return; }
+  const head = ['اسم المتقدم','رقم الهاتف','القسم','السيلز','طريقة التواصل','التاريخ','اليوم','الوقت','ملاحظة'];
+  const rows = items.map(({h, lead})=>{
+    const d = new Date(h.at);
+    return [
+      lead.name||'', lead.phone||'',
+      (sectionMap[lead._sec]||{}).name||'',
+      h.by||'',
+      h.method==='status' ? ('تغيير الحالة إلى '+(h.detail||'')) : (METHOD_LABELS[h.method]||h.method),
+      d.toLocaleDateString('ar-EG'),
+      d.toLocaleDateString('ar-EG',{weekday:'long'}),
+      d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}),
+      h.note||''
+    ];
+  });
+  downloadText('سجل-التواصل.csv', toCsv([head, ...rows]), 'text/csv');
+  toast('اتنزّل الملف ✅');
+}
+function toCsv(rows){
+  return rows.map(r => r.map(c => '"' + String(c==null?'':c).replace(/"/g,'""') + '"').join(',')).join('\r\n');
+}
+
+/* ================= LEAD SHEET ================= */
+function fillGovSelect(selected){
+  const sel = $('govInput');
+  sel.innerHTML = '<option value="">اختر المحافظة</option>' +
+    GOVERNORATES.map(g => '<option value="'+g+'" '+(g===selected?'selected':'')+'>'+g+'</option>').join('');
+}
+function openAddSheet(){
+  editingId = null;
+  currentVoiceNotes = [];
+  $('sheetTitle').textContent = 'إضافة متقدم جديد';
+  $('nameInput').value = '';
+  $('phoneInput').value = '';
+  $('notesInput').value = '';
+  $('notesInput').placeholder = 'اكتب ملاحظة عن المكالمة أو المتقدم...';
+  fillGovSelect('');
+  $('statusSection').style.display = 'none';
+  $('deleteBtn').style.display = 'none';
+  $('notesToolbar').style.display = 'none';
+  $('historyWrap').style.display = 'none';
+  $('shareToChatBtn').style.display = 'none';
+  $('leadOverlay').classList.add('open');
+}
+async function openEditSheet(id){
+  const found = findLead(id);
+  if(!found) return;
+  const l = found.lead;
+  currentSection = found.sec;
+  editingId = id;
+  $('sheetTitle').textContent = 'بيانات المتقدم';
+  $('nameInput').value = l.name || '';
+  $('phoneInput').value = l.phone || '';
+  $('notesInput').value = '';
+  $('notesInput').placeholder = 'اكتب ملاحظة جديدة... (هتتسجل باسمك وبتاريخ النهارده)';
+  fillGovSelect(l.gov || '');
+  $('statusSection').style.display = 'block';
+  $('deleteBtn').style.display = 'block';
+  $('notesToolbar').style.display = 'block';
+  $('historyWrap').style.display = 'block';
+  $('shareToChatBtn').style.display = chatAvailable() ? 'block' : 'none';
+  $('recLive').style.display = 'none';
+  recording = false;
+  renderStatusGrid(l.status || 'new');
+  renderHistory(l);
+  currentVoiceNotes = [];
+  $('notesTimeline').innerHTML = '<div style="font-size:12px;color:var(--muted);">جاري تحميل الملاحظات...</div>';
+  $('leadOverlay').classList.add('open');
+
+  currentVoiceNotes = await loadVoiceNotes(id);
+  /* مزامنة العدّاد لو البيانات قديمة */
+  const live = currentVoiceNotes.filter(v=>!v.deleted).length;
+  if(l.voiceCount !== live){ l.voiceCount = live; await saveData(); }
+  if(editingId === id) renderNotesTimeline();
+}
+function renderNotesTimeline(){
+  const found = editingId ? findLead(editingId) : null;
+  if(!found) return;
+  const l = found.lead;
+  const items = [];
+  (l.noteItems||[]).forEach(n=>{ if(!n.deleted) items.push({type:'text', ...n}); });
+  (currentVoiceNotes||[]).forEach(v=>{ if(!v.deleted) items.push({type:'voice', ...v}); });
+  items.sort((a,b)=> (b.at||0) - (a.at||0));
+
+  const wrap = $('notesTimeline');
+  if(!items.length){
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--muted);">لسه مفيش ملاحظات على المتقدم ده.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  items.forEach(it=>{
+    const canDelete = isOwner() || it.by === currentUser.username;
+    const row = document.createElement('div');
+    row.className = 'note-row';
+    row.innerHTML =
+      '<div class="note-head">' +
+        '<div class="note-by">' + (it.type==='voice' ? '🎙️ ' : '📝 ') +
+          'بواسطة <b>'+escapeHtml(it.by)+'</b> — '+fmtDateTime(it.at) +
+          (it.type==='voice' && it.dur ? ' <span class="ltr">('+fmtDur(it.dur)+')</span>' : '') +
+        '</div>' +
+        (canDelete ? '<button class="mini-del" title="حذف">✕</button>' : '') +
+      '</div>' +
+      (it.type==='text'
+        ? '<div class="note-text">'+escapeHtml(it.text)+'</div>'
+        : '<audio controls preload="none" src="'+it.audio+'"></audio>');
+    const del = row.querySelector('.mini-del');
+    if(del) del.onclick = ()=> deleteNoteItem(it);
+    wrap.appendChild(row);
+  });
+}
+async function addTextNote(){
+  if(!editingId){ toast('احفظ المتقدم الأول'); return; }
+  const txt = $('notesInput').value.trim();
+  if(!txt){ toast('اكتب الملاحظة الأول'); return; }
+  const found = findLead(editingId); if(!found) return;
+  const l = found.lead;
+  if(!l.noteItems) l.noteItems = [];
+  l.noteItems.push({id: uid('n'), by: currentUser.username, at: Date.now(), text: txt});
+  l.updatedAt = Date.now();
+  await saveData();
+  $('notesInput').value = '';
+  renderNotesTimeline();
+  renderLeads();
+  toast('اتسجّلت الملاحظة باسمك ✅');
+}
+async function deleteNoteItem(it){
+  if(!confirm('حذف الملاحظة دي؟')) return;
+  if(it.type === 'text'){
+    const found = findLead(editingId); if(!found) return;
+    const n = (found.lead.noteItems||[]).find(x=>x.id===it.id);
+    if(n){ n.deleted = true; found.lead.updatedAt = Date.now(); await saveData(); }
+  }else{
+    const v = currentVoiceNotes.find(x=>x.id===it.id);
+    if(v){
+      v.deleted = true;
+      v.audio = '';   /* نفضّي المساحة */
+      await saveVoiceNotes(editingId, currentVoiceNotes);
+      const found = findLead(editingId);
+      if(found){ found.lead.voiceCount = currentVoiceNotes.filter(x=>!x.deleted).length; found.lead.updatedAt = Date.now(); await saveData(); }
+    }
+  }
+  renderNotesTimeline();
+  renderLeads();
+}
+function renderHistory(lead){
+  const wrap = $('historyList');
+  const hist = (lead.history||[]).filter(h=>!h.deleted).slice().reverse();
+  if(hist.length === 0){
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--muted);">لسه مفيش أي تواصل مسجل مع المتقدم ده</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  hist.forEach(h=>{
+    const label = h.method === 'status'
+      ? '🔄 تغيير الحالة إلى «' + (h.detail||'') + '»'
+      : (METHOD_LABELS[h.method] || h.method);
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML =
+      '<div class="history-top">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="history-method">'+escapeHtml(label)+'</div>' +
+          '<div class="history-meta">بواسطة <b>'+escapeHtml(h.by)+'</b><br>🗓️ '+fmtDateTime(h.at)+' <span style="color:var(--muted)">('+relTime(h.at)+')</span></div>' +
+          (h.note ? '<div class="history-note">📝 '+escapeHtml(h.note)+'</div>' : '') +
+        '</div>' +
+        (isOwner() ? '<button class="mini-del" title="حذف السجل">✕</button>' : '') +
+      '</div>';
+    const del = row.querySelector('.mini-del');
+    if(del) del.onclick = async ()=>{
+      if(!confirm('حذف سجل التواصل ده؟')) return;
+      h.deleted = true;
+      lead.updatedAt = Date.now();
+      await saveData();
+      renderHistory(lead);
+      renderLeads();
+    };
+    wrap.appendChild(row);
+  });
+}
+function renderStatusGrid(current){
+  selectedStatus = current;
+  const grid = $('statusGrid');
+  grid.innerHTML = '';
+  STATUSES.forEach(s=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'status-opt' + (selectedStatus===s.key ? ' selected':'');
+    btn.style.background = selectedStatus===s.key ? s.color : '';
+    btn.textContent = s.label;
+    btn.onclick = ()=>{ selectedStatus = s.key; renderStatusGrid(selectedStatus); };
+    grid.appendChild(btn);
+  });
+}
+function closeSheet(){
+  if(recording) cancelRecording();
+  $('leadOverlay').classList.remove('open');
+  editingId = null;
+  currentVoiceNotes = [];
+}
+async function saveLead(){
+  const name = $('nameInput').value.trim();
+  const phone = toEnDigits($('phoneInput').value).trim();
+  const pendingNote = $('notesInput').value.trim();
+  const gov = $('govInput').value;
+  if(!name || !phone){ toast('من فضلك اكتب الاسم ورقم الهاتف'); return; }
+  if(!data[currentSection]) data[currentSection] = [];
+  let justBooked = false;
+
+  if(editingId){
+    const l = data[currentSection].find(x=>x.id===editingId);
+    if(l){
+      const oldStatus = l.status;
+      l.name = name; l.phone = phone; l.gov = gov;
+      l.status = selectedStatus; l.updatedAt = Date.now();
+      if(pendingNote){
+        if(!l.noteItems) l.noteItems = [];
+        l.noteItems.push({id: uid('n'), by: currentUser.username, at: Date.now(), text: pendingNote});
+      }
+      if(oldStatus !== selectedStatus){
+        if(!l.history) l.history = [];
+        l.history.push({
+          id: uid('h'), by: currentUser.username, method:'status',
+          detail: (statusMap[selectedStatus]||{}).label || selectedStatus, at: Date.now()
+        });
+      }
+      /* ===== نظام النقاط: نقطة لمين كمّل مع العميل لحد الحجز ===== */
+      if(oldStatus !== 'booked' && selectedStatus === 'booked'){
+        l.bookedBy = currentUser.username;
+        l.bookedAt = Date.now();
+        justBooked = true;
+      }else if(oldStatus === 'booked' && selectedStatus !== 'booked'){
+        l.bookedBy = null; l.bookedAt = null;
+      }
+    }
+  }else{
+    /* تحذير من التكرار في نفس القسم */
+    const dupe = sectionLeads(currentSection).find(x => phoneKey(x.phone) === phoneKey(phone));
+    if(dupe && !confirm('الرقم ده مسجل بالفعل في القسم ده باسم «'+dupe.name+'».\nتحب تضيفه تاني برضه؟')) return;
+    const now = Date.now();
+    data[currentSection].push({
+      id: uid(), name, phone, gov,
+      status:'new', createdAt: now, updatedAt: now,
+      createdBy: currentUser.username,
+      voiceCount: 0,
+      noteItems: pendingNote ? [{id: uid('n'), by: currentUser.username, at: now, text: pendingNote}] : [],
+      history: [{id: uid('h'), by: currentUser.username, method:'created', at: now}]
+    });
+  }
+  await saveData();
+  closeSheet();
+  renderLeads();
+  if(justBooked) celebrateBooking(name);
+  else toast('اتحفظ ✅');
+}
+async function deleteLead(){
+  if(!editingId) return;
+  if(!confirm('متأكد إنك عايز تحذف المتقدم ده؟')) return;
+  const l = (data[currentSection]||[]).find(x=>x.id===editingId);
+  if(l){ l.deletedAt = Date.now(); l.updatedAt = Date.now(); }
+  await saveData();
+  closeSheet();
+  renderLeads();
+}
+
+/* ================= صوت الإنجاز + الاحتفال ================= */
+let soundOn = true;
+let audioCtx = null;
+try{ soundOn = localStorage.getItem('crm-sound') !== 'off'; }catch(e){}
+
+function getCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+/* نغمة إنجاز 8-bit مولّدة برمجياً (مفيش ملفات صوت خارجية) */
+function playSuccessJingle(){
+  if(!soundOn) return;
+  const ctx = getCtx();
+  if(!ctx) return;
+  const t0 = ctx.currentTime + 0.02;
+  const master = ctx.createGain();
+  master.gain.value = 0.22;
+  master.connect(ctx.destination);
+
+  const blip = (freq, start, dur, type, vol)=>{
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type || 'square';
+    osc.frequency.setValueAtTime(freq, t0 + start);
+    g.gain.setValueAtTime(0.0001, t0 + start);
+    g.gain.exponentialRampToValueAtTime(vol || 1, t0 + start + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur);
+    osc.connect(g); g.connect(master);
+    osc.start(t0 + start);
+    osc.stop(t0 + start + dur + 0.02);
+  };
+
+  /* سلّم صاعد سريع ثم ثلاثية ختامية */
+  const climb = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+  climb.forEach((f,i)=> blip(f, i*0.075, 0.13));
+  blip(2093.00, 0.47, 0.10);
+  blip(1567.98, 0.60, 0.10);
+  blip(2093.00, 0.72, 0.46);
+  blip(1046.50, 0.72, 0.46, 'square', 0.55);   /* طبقة أوطى للعمق */
+  blip(130.81,  0.72, 0.40, 'triangle', 0.7);  /* باص */
+}
+function celebrateBooking(leadName){
+  playSuccessJingle();
+  const pts = settings.pointsPerBooking || 1;
+  const el = $('celebrate');
+  $('celebrateName').textContent = leadName || '';
+  $('celebratePts').textContent = '+' + pts + (pts === 1 ? ' نقطة' : ' نقاط');
+  el.style.display = 'flex';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.display = 'none'; }, 2600);
+}
+function toggleSound(){
+  soundOn = !soundOn;
+  try{ localStorage.setItem('crm-sound', soundOn ? 'on' : 'off'); }catch(e){}
+  $('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  if(soundOn) playSuccessJingle();
+}
+
+/* ================= نظام النقاط والبونص ================= */
+function pointsRange(mode, monthVal){
+  const now = Date.now();
+  const d = new Date();
+  if(mode === 'month'){
+    const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+    return [start, now];
+  }
+  if(mode === 'prev'){
+    const start = new Date(d.getFullYear(), d.getMonth()-1, 1).getTime();
+    const end   = new Date(d.getFullYear(), d.getMonth(), 1).getTime() - 1;
+    return [start, end];
+  }
+  if(mode === 'pick' && monthVal){
+    const [y,m] = monthVal.split('-').map(Number);
+    const start = new Date(y, m-1, 1).getTime();
+    const end   = new Date(y, m, 1).getTime() - 1;
+    return [start, end];
+  }
+  return [0, now];
+}
+function computeScores(range){
+  const [from, to] = range;
+  const map = {};
+  const ensure = n => (map[n] = map[n] || {name:n, points:0, bookings:0, contacts:0, leads:new Set()});
+  agentNames().forEach(ensure);
+  allLeads().forEach(l=>{
+    (l.history||[]).forEach(h=>{
+      if(h.deleted || !CONTACT_METHODS.includes(h.method)) return;
+      const at = h.at || 0;
+      if(at < from || at > to) return;
+      const a = ensure(h.by); a.contacts++; a.leads.add(l.id);
+    });
+    if(l.status === 'booked' && l.bookedBy){
+      const at = l.bookedAt || l.updatedAt || 0;
+      if(at >= from && at <= to){
+        const a = ensure(l.bookedBy);
+        a.bookings++;
+        a.points += (settings.pointsPerBooking || 1);
+      }
+    }
+  });
+  return Object.values(map)
+    .map(a=>({...a, leadCount:a.leads.size, bonus: a.points * (settings.pointValue || 0)}))
+    .sort((x,y)=> y.points - x.points || y.bookings - x.bookings || y.contacts - x.contacts);
+}
+let pointsMode = 'month';
+function renderPoints(){
+  const range = pointsRange(pointsMode, $('pointsMonth').value);
+  const rows = computeScores(range);
+  const totalPts = rows.reduce((s,r)=>s+r.points,0);
+  const totalBonus = rows.reduce((s,r)=>s+r.bonus,0);
+
+  $('pointsTotal').innerHTML =
+    'إجمالي النقاط في الفترة: <b>' + totalPts + '</b>' +
+    (settings.pointValue ? ' — إجمالي البونص: <b>' + totalBonus.toLocaleString('ar-EG') + '</b> ' + escapeHtml(settings.currency) : '');
+
+  const wrap = $('pointsList');
+  const scored = rows.filter(r => r.points > 0 || r.contacts > 0);
+  if(!scored.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">🏆</div><p>لسه مفيش نشاط في الفترة دي.</p></div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  wrap.innerHTML = scored.map((r,i)=>{
+    const isMe = currentUser && r.name === currentUser.username;
+    const rank = r.points > 0 ? (medals[i] || ('#' + (i+1))) : '—';
+    return '<div class="rank-row'+(isMe?' me':'')+'">' +
+      '<div class="rank-badge">'+rank+'</div>' +
+      '<div class="rank-info">' +
+        '<div class="rank-name">'+escapeHtml(r.name)+(isMe?' <span style="font-size:10.5px;color:var(--gold)">(أنت)</span>':'')+'</div>' +
+        '<div class="rank-sub">حجوزات <b>'+r.bookings+'</b> · تواصلات <b>'+r.contacts+'</b> · عملاء <b>'+r.leadCount+'</b></div>' +
+      '</div>' +
+      '<div class="rank-pts">' +
+        '<div class="rank-pts-n">'+r.points+'</div>' +
+        '<div class="rank-pts-l">نقطة</div>' +
+        (settings.pointValue ? '<div class="rank-bonus">'+r.bonus.toLocaleString('ar-EG')+' '+escapeHtml(settings.currency)+'</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+function exportPointsCsv(){
+  const rows = computeScores(pointsRange(pointsMode, $('pointsMonth').value));
+  const head = ['الترتيب','السيلز','النقاط','الحجوزات','التواصلات','عدد العملاء','البونص ('+settings.currency+')'];
+  const body = rows.map((r,i)=>[i+1, r.name, r.points, r.bookings, r.contacts, r.leadCount, r.bonus]);
+  downloadText('نقاط-البونص.csv', toCsv([head, ...body]), 'text/csv');
+  toast('اتنزّل الملف ✅');
+}
+function myPoints(){
+  if(!currentUser) return 0;
+  const r = computeScores(pointsRange('month')).find(x=>x.name === currentUser.username);
+  return r ? r.points : 0;
+}
+
+/* ================= إدارة الدورات ================= */
+let editingSectionId = null;
+function openSectionSheet(id){
+  editingSectionId = id || null;
+  const s = id ? sectionMap[id] : null;
+  $('secSheetTitle').textContent = id ? 'تعديل الدورة' : 'إضافة دورة جديدة';
+  $('secNameInput').value = s ? s.name : '';
+  $('secColorSel').value  = s ? s.color : SECTION_PALETTE[SECTIONS.length % SECTION_PALETTE.length];
+  $('secDeleteBtn').style.display = id ? 'block' : 'none';
+  renderSecColors();
+  renderSecEmojis(s ? s.icon : '');
+  $('sectionOverlay').classList.add('open');
+}
+function renderSecColors(){
+  const wrap = $('secColorGrid');
+  const cur = $('secColorSel').value;
+  wrap.innerHTML = '';
+  SECTION_PALETTE.forEach(c=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'color-dot' + (c === cur ? ' sel' : '');
+    b.style.background = c;
+    b.onclick = ()=>{ $('secColorSel').value = c; renderSecColors(); };
+    wrap.appendChild(b);
+  });
+}
+function renderSecEmojis(cur){
+  const wrap = $('secEmojiGrid');
+  $('secEmojiSel').value = cur || '';
+  wrap.innerHTML = '';
+  SECTION_EMOJIS.forEach(e=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'emoji-opt' + (e === cur ? ' sel' : '');
+    b.textContent = e;
+    b.onclick = ()=>{ renderSecEmojis(e); };
+    wrap.appendChild(b);
+  });
+}
+async function saveSection(){
+  const name = $('secNameInput').value.trim();
+  if(!name){ toast('اكتب اسم الدورة'); return; }
+  const color = $('secColorSel').value;
+  const icon  = $('secEmojiSel').value;
+  if(editingSectionId){
+    const s = sectionMap[editingSectionId];
+    if(s){ s.name = name; s.color = color; s.icon = icon; }
+  }else{
+    const dupe = SECTIONS.find(s => normAr(s.name) === normAr(name));
+    if(dupe){ toast('فيه دورة بنفس الاسم بالفعل'); return; }
+    const id = 'sec' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    SECTIONS.push({id, name, color, icon: icon || '🏅', custom:true});
+    if(!data[id]) data[id] = [];
+  }
+  await saveSections();
+  await saveData();
+  $('sectionOverlay').classList.remove('open');
+  renderHome();
+  toast(editingSectionId ? 'اتعدّلت الدورة ✅' : 'اتضافت الدورة ✅');
+}
+async function deleteSection(){
+  if(!editingSectionId) return;
+  const n = sectionLeads(editingSectionId).length;
+  if(n > 0){
+    alert('مش ممكن تحذف الدورة دي وفيها ' + n + ' متقدم.\nانقل أو احذف المتقدمين الأول.');
+    return;
+  }
+  if(!confirm('متأكد إنك عايز تحذف دورة «' + sectionMap[editingSectionId].name + '»؟')) return;
+  const rec = allSectionRecords.find(s=>s.id === editingSectionId) || sectionMap[editingSectionId];
+  if(rec) rec.deleted = true;
+  SECTIONS = SECTIONS.filter(s=>s.id !== editingSectionId);
+  await saveSections();
+  $('sectionOverlay').classList.remove('open');
+  renderHome();
+  toast('اتحذفت الدورة');
+}
+
+/* ================= VOICE NOTES (المطلب 2) ================= */
+const MAX_RECORD_MS = 120000;
+function pickMime(){
+  if(!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  const opts = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+  for(const m of opts){ if(MediaRecorder.isTypeSupported(m)) return m; }
+  return '';
+}
+async function startRecording(){
+  if(!editingId){ toast('احفظ المتقدم الأول قبل تسجيل ملاحظة صوتية'); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+    toast('المتصفح ده مش بيدعم تسجيل الصوت'); return;
+  }
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(err){ toast('مش قادرين نوصل للميكروفون — اسمح بصلاحية الميكروفون'); return; }
+
+  audioChunks = [];
+  recordCancelled = false;
+  const mime = pickMime();
+  try{
+    mediaRecorder = new MediaRecorder(stream, mime ? {mimeType: mime, audioBitsPerSecond: 32000} : undefined);
+  }catch(e){
+    mediaRecorder = new MediaRecorder(stream);
+  }
+  const leadIdAtStart = editingId;
+
+  mediaRecorder.ondataavailable = e=>{ if(e.data && e.data.size>0) audioChunks.push(e.data); };
+  mediaRecorder.onstop = ()=>{
+    stream.getTracks().forEach(t=>t.stop());
+    clearInterval(recordTicker); clearTimeout(recordHardStop);
+    $('recLive').style.display = 'none';
+    $('voiceRecordBtn').textContent = '🎙️ ملاحظة صوتية';
+    if(recordCancelled){ audioChunks = []; return; }
+
+    const dur = Math.round((Date.now() - recordStartedAt)/1000);
+    if(dur < 1){ toast('التسجيل قصير جداً'); return; }
+    const blob = new Blob(audioChunks, {type: mediaRecorder.mimeType || 'audio/webm'});
+    if(blob.size > 3*1024*1024){ toast('التسجيل كبير جداً — سجّل ملاحظة أقصر'); return; }
+
+    const reader = new FileReader();
+    reader.onloadend = async ()=>{
+      const notes = await loadVoiceNotes(leadIdAtStart);
+      notes.push({id: uid('v'), by: currentUser.username, at: Date.now(), dur, audio: reader.result});
+      const ok = await saveVoiceNotes(leadIdAtStart, notes);
+      if(!ok){ toast('⚠️ فشل حفظ الملاحظة الصوتية — المساحة ممكن تكون امتلت'); return; }
+      const found = findLead(leadIdAtStart);
+      if(found){
+        found.lead.voiceCount = notes.filter(v=>!v.deleted).length;
+        found.lead.updatedAt = Date.now();
+        await saveData();
+      }
+      if(editingId === leadIdAtStart){ currentVoiceNotes = notes; renderNotesTimeline(); }
+      renderLeads();
+      toast('اتحفظت الملاحظة الصوتية باسمك ✅');
+    };
+    reader.readAsDataURL(blob);
+  };
+
+  mediaRecorder.start();
+  recording = true;
+  recordStartedAt = Date.now();
+  $('recLive').style.display = 'flex';
+  $('recTimer').textContent = '0:00';
+  $('voiceRecordBtn').textContent = '⏺️ جاري التسجيل...';
+  recordTicker = setInterval(()=>{
+    $('recTimer').textContent = fmtDur((Date.now()-recordStartedAt)/1000);
+  }, 500);
+  recordHardStop = setTimeout(()=>{ if(recording) stopRecording(); }, MAX_RECORD_MS);
+}
+function stopRecording(){
+  if(mediaRecorder && recording){ recording = false; mediaRecorder.stop(); }
+}
+function cancelRecording(){
+  if(mediaRecorder && recording){ recordCancelled = true; recording = false; mediaRecorder.stop(); }
+}
+
+/* ================= MANUAL CONTACT ================= */
+function openContactSheet(){
+  if(!editingId){ toast('احفظ المتقدم الأول'); return; }
+  contactMethodSel = 'call';
+  renderContactMethods();
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  $('contactWhen').value = d.toISOString().slice(0,16);
+  $('contactNote').value = '';
+  $('contactOverlay').classList.add('open');
+}
+function renderContactMethods(){
+  const grid = $('contactMethodGrid');
+  grid.innerHTML = '';
+  MANUAL_METHODS.forEach(m=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'status-opt' + (contactMethodSel===m.key ? ' selected':'');
+    if(contactMethodSel===m.key) b.style.background = '#14213D';
+    b.textContent = m.label;
+    b.onclick = ()=>{ contactMethodSel = m.key; renderContactMethods(); };
+    grid.appendChild(b);
+  });
+}
+async function saveManualContact(){
+  const whenVal = $('contactWhen').value;
+  const at = whenVal ? new Date(whenVal).getTime() : Date.now();
+  if(isNaN(at)){ toast('التاريخ غير صحيح'); return; }
+  if(at > Date.now() + 60000){ toast('مينفعش تسجّل تواصل في المستقبل'); return; }
+  await logContact(currentSection, editingId, contactMethodSel, {at, note: $('contactNote').value.trim()});
+  $('contactOverlay').classList.remove('open');
+  const found = findLead(editingId);
+  if(found) renderHistory(found.lead);
+  renderLeads();
+  toast('اتسجّل التواصل ✅');
+}
+
+/* ================= EXPORT (المطلب 3) ================= */
+function renderExportFilters(){
+  /* الحالات */
+  const sr = $('expStatusRow');
+  sr.innerHTML = '';
+  STATUSES.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (expStatuses.has(s.key) ? ' on':'');
+    b.textContent = s.label;
+    b.onclick = ()=>{
+      expStatuses.has(s.key) ? expStatuses.delete(s.key) : expStatuses.add(s.key);
+      clearPreset(); renderExportFilters(); renderExport();
+    };
+    sr.appendChild(b);
+  });
+  /* الأقسام */
+  const secR = $('expSectionRow');
+  secR.innerHTML = '';
+  SECTIONS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (expSections.has(s.id) ? ' on':'');
+    b.textContent = s.name;
+    b.onclick = ()=>{
+      expSections.has(s.id) ? expSections.delete(s.id) : expSections.add(s.id);
+      renderExportFilters(); renderExport();
+    };
+    secR.appendChild(b);
+  });
+  /* المحافظة */
+  if($('expGov').options.length === 0){
+    $('expGov').innerHTML = '<option value="">كل المحافظات</option>' +
+      GOVERNORATES.map(g=>'<option value="'+g+'">'+g+'</option>').join('');
+  }
+  /* السيلز */
+  const cur = $('expAgent').value;
+  $('expAgent').innerHTML = '<option value="">كل السيلز</option>' +
+    agentNames().map(n=>'<option value="'+escapeHtml(n)+'">تواصل معاه: '+escapeHtml(n)+'</option>').join('');
+  if(cur) $('expAgent').value = cur;
+}
+function clearPreset(){
+  [...$('expPresetRow').children].forEach(c=>c.classList.remove('active'));
+}
+function applyPreset(p){
+  expStatuses = new Set();
+  if(p === 'replied')        expStatuses.add('replied');
+  else if(p === 'booked')    expStatuses.add('booked');
+  else if(p === 'interested'){ expStatuses.add('replied'); expStatuses.add('will_book'); }
+  renderExportFilters();
+  renderExport();
+}
+function currentPreset(){
+  const active = [...$('expPresetRow').children].find(c=>c.classList.contains('active'));
+  return active ? active.dataset.preset : null;
+}
+function getExportLeads(){
+  let leads = exportScope ? sectionLeads(exportScope).map(l=>({...l,_sec:exportScope})) : allLeads();
+  if(expSections.size) leads = leads.filter(l => expSections.has(l._sec));
+
+  const preset = currentPreset();
+  if(preset === 'not_booked')      leads = leads.filter(l => l.status !== 'booked');
+  else if(preset === 'no_contact') leads = leads.filter(l => !lastContactOf(l));
+
+  if(expStatuses.size) leads = leads.filter(l => expStatuses.has(l.status || 'new'));
+
+  const gov = $('expGov').value;
+  if(gov) leads = leads.filter(l => l.gov === gov);
+
+  const agent = $('expAgent').value;
+  if(agent) leads = leads.filter(l => (l.history||[]).some(h => !h.deleted && h.by === agent && CONTACT_METHODS.includes(h.method)));
+
+  const f = $('expFrom').value, t = $('expTo').value;
+  if(f){ const from = new Date(f+'T00:00:00').getTime(); leads = leads.filter(l => (l.createdAt||0) >= from); }
+  if(t){ const to = new Date(t+'T23:59:59').getTime();  leads = leads.filter(l => (l.createdAt||0) <= to); }
+
+  leads = leads.filter(l => phoneKey(l.phone));
+
+  if(expDedup){
+    const seen = new Set();
+    leads = leads.filter(l=>{
+      const k = phoneKey(l.phone);
+      if(seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+  }
+  leads.sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0));
+  return leads;
+}
+function buildExportText(leads, format){
+  if(format === 'phone') return leads.map(l=>localPhone(l.phone)).join('\n');
+  if(format === 'intl')  return leads.map(l=>intlPhone(l.phone)).join('\n');
+  if(format === 'csv')   return exportCsvText(leads);
+  return leads.map(l => (l.name||'') + ' - ' + localPhone(l.phone)).join('\n');
+}
+function exportCsvText(leads){
+  const head = ['الاسم','رقم الهاتف','الرقم الدولي','القسم','الحالة','المحافظة','تاريخ التسجيل','آخر تواصل','السيلز اللي تواصل','طريقة آخر تواصل','عدد التواصلات','آخر ملاحظة'];
+  const rows = leads.map(l=>{
+    const lc = lastContactOf(l);
+    const nCon = (l.history||[]).filter(h=>!h.deleted && CONTACT_METHODS.includes(h.method)).length;
+    const lastNote = (l.noteItems||[]).filter(n=>!n.deleted).slice(-1)[0];
+    return [
+      l.name||'', localPhone(l.phone), intlPhone(l.phone),
+      (sectionMap[l._sec]||{}).name||'',
+      (statusMap[l.status]||statusMap.new).label,
+      l.gov||'',
+      l.createdAt ? new Date(l.createdAt).toLocaleDateString('ar-EG') : '',
+      lc ? fmtDateTime(lc.at) : 'لم يتم التواصل',
+      lc ? lc.by : '',
+      lc ? (METHOD_LABELS[lc.method]||lc.method) : '',
+      nCon,
+      lastNote ? lastNote.text : ''
+    ];
+  });
+  return toCsv([head, ...rows]);
+}
+function buildVcf(leads){
+  return leads.map(l=>
+    'BEGIN:VCARD\r\nVERSION:3.0\r\n' +
+    'FN:' + (l.name||'متقدم') + '\r\n' +
+    'N:' + (l.name||'متقدم') + ';;;;\r\n' +
+    'TEL;TYPE=CELL:' + intlPhone(l.phone) + '\r\n' +
+    'NOTE:' + ((sectionMap[l._sec]||{}).name||'') + ' - ' + (statusMap[l.status]||statusMap.new).label + '\r\n' +
+    'END:VCARD'
+  ).join('\r\n');
+}
+function renderExport(){
+  const leads = getExportLeads();
+  $('exportTotal').innerHTML = 'عدد الأرقام في الفلتر ده: <b>' + leads.length + '</b>' +
+    (expDedup ? ' <span style="font-weight:500;color:var(--muted);font-size:12px;">(بدون تكرار)</span>' : '');
+  const wrap = $('exportList');
+  wrap.innerHTML = '';
+  if(leads.length === 0){
+    wrap.innerHTML = '<div class="empty-state" style="padding:24px 10px;"><p>لا يوجد أرقام مطابقة للفلاتر دي.</p></div>';
+    return;
+  }
+  leads.slice(0,300).forEach(l=>{
+    const st = statusMap[l.status] || statusMap.new;
+    const row = document.createElement('div');
+    row.className = 'export-row';
+    row.innerHTML =
+      '<span class="en">'+escapeHtml(l.name||'')+'</span>' +
+      '<span class="status-pill" style="background:'+st.color+';font-size:10px;">'+st.label+'</span>' +
+      '<span class="ph ltr">'+escapeHtml(localPhone(l.phone))+'</span>';
+    wrap.appendChild(row);
+  });
+  if(leads.length > 300){
+    const more = document.createElement('div');
+    more.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);padding:10px;';
+    more.textContent = 'معروض أول 300 — التصدير والنسخ بياخدوا الـ ' + leads.length + ' كلهم.';
+    wrap.appendChild(more);
+  }
+}
+
+/* ================= IMPORT ================= */
+function renderImport(){
+  const cur = $('impSection').value;
+  $('impSection').innerHTML = SECTIONS.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');
+  if(cur && sectionMap[cur]) $('impSection').value = cur;
+  if($('impGov').options.length === 0){
+    $('impGov').innerHTML = '<option value="">بدون محافظة</option>' + GOVERNORATES.map(g=>'<option value="'+g+'">'+g+'</option>').join('');
+  }
+  $('impResult').innerHTML = '';
+}
+function parseImportLines(text){
+  const out = [];
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    const raw = line.trim();
+    if(!raw) return;
+    let name = '', phone = '';
+    const parts = raw.split(/[,;\t]/);
+    if(parts.length >= 2){
+      const a = parts[0].trim(), b = parts.slice(1).join(' ').trim();
+      if(digitsOnly(b).length >= 8){ name = a; phone = b; }
+      else if(digitsOnly(a).length >= 8){ phone = a; name = b; }
+      else return;
+    }else{
+      phone = raw;
+    }
+    const k = phoneKey(phone);
+    if(k.length < 8) return;
+    out.push({name: name.trim(), phone: toEnDigits(phone).replace(/[^\d+]/g,'')});
+  });
+  return out;
+}
+async function runImport(){
+  const sid = $('impSection').value;
+  const gov = $('impGov').value;
+  const parsed = parseImportLines($('impText').value);
+  if(!parsed.length){ toast('مفيش أرقام صالحة في النص'); return; }
+  if(!data[sid]) data[sid] = [];
+  const existing = new Set(sectionLeads(sid).map(l=>phoneKey(l.phone)));
+  let added = 0, skipped = 0;
+  const now = Date.now();
+  parsed.forEach((p, i)=>{
+    const k = phoneKey(p.phone);
+    if(existing.has(k)){ skipped++; return; }
+    existing.add(k);
+    data[sid].push({
+      id: uid(),
+      name: p.name || ('متقدم — ' + k.slice(-4)),
+      phone: p.phone, gov,
+      status:'new', createdAt: now + i, updatedAt: now + i,
+      createdBy: currentUser.username, voiceCount: 0, noteItems: [],
+      history: [{id: uid('h'), by: currentUser.username, method:'created', at: now + i}]
+    });
+    added++;
+  });
+  await saveData();
+  $('impResult').innerHTML =
+    '<div class="new-account-result">تمت الإضافة ✅<br>اتضاف: <b>'+added+'</b> رقم — اتجاهل (مكرر): <b>'+skipped+'</b></div>';
+  $('impText').value = '';
+  toast('اتضاف ' + added + ' رقم');
+}
+
+/* ================= ربط قاعدة البيانات المشتركة ================= */
+/* في وضع المصادقة السحابية الحسابات بتتخزن في Supabase Auth نفسه،
+   فمابنرفعش ملف الحسابات المحلي (اللي فيه كلمات مرور نصية) للسيرفر */
+const ALL_KEYS = ()=> (cloudAuthActive() ? [LEADS_KEY, SECTIONS_KEY, SETTINGS_KEY]
+                                         : [LEADS_KEY, ACCOUNTS_KEY, SECTIONS_KEY, SETTINGS_KEY])
+  .concat(allLeads().filter(l=>l.voiceCount>0).map(l=>VOICE_PREFIX + l.id));
+
+function renderCloudPanel(){
+  const box = $('cloudStatus');
+  const cfgFile = (window.CRM_CONFIG||{});
+  let ov = null;
+  try{ ov = JSON.parse(localStorage.getItem('crm-cloud')||'null'); }catch(e){}
+  const src = ov ? 'محفوظ على الجهاز ده' : ((cfgFile.url||cfgFile.supabaseUrl) ? 'من ملف config.js' : '');
+
+  if(Store.mode === 'cloud'){
+    box.style.background = '#EAF7EF'; box.style.color = 'var(--green)';
+    box.textContent = '✅ متصل بقاعدة البيانات المشتركة — ' + src;
+  }else if(Store.mode === 'cloud-offline'){
+    box.style.background = '#FFF4E0'; box.style.color = '#A9700F';
+    box.textContent = '⚠️ الإعدادات موجودة بس مفيش اتصال بالسيرفر — بتشتغل محلياً';
+  }else{
+    box.style.background = '#FBEAEA'; box.style.color = 'var(--danger)';
+    box.textContent = '❌ مش متصل — كل جهاز بيحفظ بياناته لوحده';
+  }
+  $('cloudUrl').value = (ov && ov.url) || cfgFile.url || cfgFile.supabaseUrl || '';
+  $('cloudKey').value = (ov && ov.key) || cfgFile.key || cfgFile.supabaseKey || '';
+  $('cloudPushBtn').style.display = Store.isCloud() ? 'block' : 'none';
+}
+async function testAndSaveCloud(){
+  const url = $('cloudUrl').value.trim();
+  const key = $('cloudKey').value.trim();
+  if(!url || !key){ toast('اكتب الـ URL والـ key'); return; }
+  if(!/^https:\/\/.+\.supabase\.co\/?$/i.test(url) && !confirm('الـ URL شكله مش زي روابط Supabase المعتادة. تحب تكمّل؟')) return;
+  toast('جاري الاختبار...');
+  const r = await Store.testCloud(url, key);
+  if(!r.ok){
+    alert('فشل الاتصال:\n' + r.error + '\n\nراجع:\n• الـ URL والـ key صح\n• جدول crm_kv اتعمل\n• سياسة الوصول (Policy) اتفعّلت');
+    return;
+  }
+  localStorage.setItem('crm-cloud', JSON.stringify({url, key}));
+  await Store.detect();
+  $('storageNote').textContent = Store.label();
+  $('storageDot').className = 'dot' + (Store.isShared() ? '' : ' warn');
+  renderCloudPanel();
+  if(confirm('الاتصال نجح ✅\n\nتحب ترفع بيانات الجهاز ده للسيرفر دلوقتي؟\n(لو ده أول جهاز، اضغط موافق)')){
+    await pushLocalToCloud();
+  }else{
+    await reloadEverything();
+  }
+}
+async function pushLocalToCloud(){
+  toast('جاري الرفع...');
+  const ok = await Store.pushLocal(ALL_KEYS());
+  toast(ok ? 'اترفعت البيانات ✅' : '⚠️ بعض البيانات مارفعتش — جرّب تاني');
+  renderCloudPanel();
+}
+async function clearCloud(){
+  if(!confirm('هيتم فصل الجهاز ده عن قاعدة البيانات المشتركة.\nالبيانات المحفوظة محلياً هتفضل موجودة. تكمّل؟')) return;
+  localStorage.removeItem('crm-cloud');
+  toast('اتفصل — اقفل البرنامج وافتحه تاني');
+  renderCloudPanel();
+}
+async function reloadEverything(){
+  accounts = await loadAccounts();
+  await loadSections();
+  await loadSettings();
+  data = await loadData();
+  applyView();
+}
+
+/* ================= الشات الجماعي =================
+   الرسايل في جدول مستقل على السيرفر عشان الإرسال ما يعيدش كتابة كل البيانات،
+   ومحتاج قاعدة البيانات المشتركة (مفيش شات بين جهاز وحاله).
+================================================== */
+const CHAT_SEEN_KEY  = 'crm-chat-seen';
+const CHAT_QUEUE_KEY = 'crm-chat-queue';
+let chatMessages = [];
+let chatLastAt = null;
+let chatAttach = null;      /* {id, name, phone, sec} */
+let chatTimer = null;
+let chatUnread = 0;
+let chatFirstLoad = true;
+
+function chatAvailable(){ return Store.isCloud(); }
+function chatSeenAt(){
+  try{ return Number(localStorage.getItem(CHAT_SEEN_KEY) || 0); }catch(e){ return 0; }
+}
+function markChatSeen(){
+  const last = chatMessages.length ? new Date(chatMessages[chatMessages.length-1].created_at).getTime() : Date.now();
+  try{ localStorage.setItem(CHAT_SEEN_KEY, String(last)); }catch(e){}
+  chatUnread = 0;
+  renderChatBadge();
+}
+function renderChatBadge(){
+  const b = $('chatBadge');
+  if(!b) return;
+  b.style.display = chatUnread > 0 ? 'flex' : 'none';
+  b.textContent = chatUnread > 99 ? '99+' : chatUnread;
+}
+function queuedMessages(){
+  try{ return JSON.parse(localStorage.getItem(CHAT_QUEUE_KEY) || '[]'); }catch(e){ return []; }
+}
+function saveQueue(q){
+  try{ localStorage.setItem(CHAT_QUEUE_KEY, JSON.stringify(q)); }catch(e){}
+}
+
+async function fetchChat(incremental){
+  if(!chatAvailable()) return;
+  let q = 'chat_messages?select=id,author_id,author_name,body,lead_ref,deleted,created_at&order=created_at.asc&limit=300';
+  if(incremental && chatLastAt) q += '&created_at=gt.' + encodeURIComponent(chatLastAt);
+  const rows = await Store.rest(q);
+  if(!rows) return;
+  if(incremental && chatLastAt){
+    const known = new Set(chatMessages.map(m=>m.id));
+    const fresh = rows.filter(m=>!known.has(m.id));
+    /* التعديلات (الحذف) بتتحدث في الموجود */
+    rows.forEach(r=>{ const ex = chatMessages.find(m=>m.id===r.id); if(ex) Object.assign(ex, r); });
+    chatMessages = chatMessages.concat(fresh);
+  }else{
+    chatMessages = rows;
+  }
+  if(chatMessages.length) chatLastAt = chatMessages[chatMessages.length-1].created_at;
+
+  const seen = chatSeenAt();
+  chatUnread = chatMessages.filter(m =>
+    !m.deleted &&
+    new Date(m.created_at).getTime() > seen &&
+    m.author_name !== (currentUser && currentUser.username)
+  ).length;
+  renderChatBadge();
+}
+let flushingChat = false;
+async function flushChatQueue(){
+  if(flushingChat) return;                 /* منع تشغيلين في نفس الوقت */
+  const q = queuedMessages();
+  if(!q.length || !chatAvailable()) return;
+  flushingChat = true;
+  const left = [];
+  try{
+    for(const m of q){
+      try{
+        await postChatRow(m);
+      }catch(e){ left.push(m); }
+    }
+    saveQueue(left);
+    if(q.length !== left.length) await fetchChat(false);
+  }finally{ flushingChat = false; }
+}
+/* client_id بيخلي إعادة الإرسال آمنة: لو الرسالة وصلت قبل كده والرد ضاع،
+   السيرفر بيتجاهل النسخة التانية بدل ما تتكرر */
+async function postChatRow(m){
+  return await Store.rest('chat_messages', {
+    method:'POST',
+    headers:{'Prefer':'resolution=ignore-duplicates,return=minimal'},
+    body: JSON.stringify([{
+      client_id: m.client_id,
+      author_id: (CloudAuth.profile && CloudAuth.profile.id) || null,
+      author_name: m.author_name,
+      body: m.body,
+      lead_ref: m.lead_ref || null,
+      created_at: m.at
+    }])
+  });
+}
+async function sendChatMessage(){
+  const box = $('chatInput');
+  const body = box.value.trim();
+  if(!body && !chatAttach) return;
+  if(!chatAvailable()){ toast('الشات محتاج قاعدة البيانات المشتركة'); return; }
+
+  const msg = {
+    client_id: uid('c') + Math.random().toString(36).slice(2,8),
+    author_name: currentUser.username,
+    body: body || '👆',
+    lead_ref: chatAttach,
+    at: new Date().toISOString()
+  };
+  box.value = ''; box.style.height = 'auto';
+  clearChatAttach();
+
+  /* بنعرضها فوراً وبعدين نبعتها — عشان الشات يحس سريع */
+  const temp = {id:'tmp_'+uid('m'), author_name: msg.author_name, body: msg.body,
+                lead_ref: msg.lead_ref, created_at: msg.at, _pending:true};
+  chatMessages.push(temp);
+  renderChat(true);
+
+  try{
+    await postChatRow(msg);
+    chatMessages = chatMessages.filter(m=>m.id !== temp.id);
+    await fetchChat(true);
+    renderChat(true);
+    markChatSeen();
+  }catch(e){
+    /* مفيش نت — نحطها في الطابور وتتبعت لوحدها بعدين */
+    const q = queuedMessages(); q.push(msg); saveQueue(q);
+    temp._queued = true; temp._pending = false;
+    renderChat(true);
+    toast('مفيش نت — الرسالة هتتبعت لما النت يرجع');
+  }
+}
+async function deleteChatMessage(m){
+  if(!confirm('حذف الرسالة دي للكل؟')) return;
+  try{
+    await Store.rest('chat_messages?id=eq.' + encodeURIComponent(m.id), {
+      method:'PATCH', headers:{'Prefer':'return=minimal'},
+      body: JSON.stringify({deleted: true, body: ''})
+    });
+    m.deleted = true; m.body = '';
+    renderChat(false);
+  }catch(e){ alert('فشل الحذف: ' + e.message); }
+}
+function dayLabel(ts){
+  const d = new Date(ts), t = new Date();
+  const same = (a,b)=> a.toDateString() === b.toDateString();
+  if(same(d,t)) return 'النهارده';
+  const y = new Date(t.getTime() - 86400000);
+  if(same(d,y)) return 'امبارح';
+  return d.toLocaleDateString('ar-EG', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+function renderChat(scrollToEnd){
+  const wrap = $('chatScroll');
+  if(!chatAvailable()){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">💬</div>' +
+      '<p>الشات الجماعي محتاج قاعدة البيانات المشتركة.<br>' +
+      'اربط البرنامج بـ Supabase الأول من «إدارة الحسابات».</p></div>';
+    return;
+  }
+  const list = chatMessages.slice().sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
+  if(!list.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">💬</div>' +
+      '<p>مفيش رسايل لسه.<br>ابعت أول رسالة للفريق 👇</p></div>';
+    return;
+  }
+  const nearBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 140;
+  wrap.innerHTML = '';
+  let lastDay = '';
+  list.forEach(m=>{
+    const day = dayLabel(m.created_at);
+    if(day !== lastDay){
+      lastDay = day;
+      const d = document.createElement('div');
+      d.className = 'chat-day'; d.textContent = day;
+      wrap.appendChild(d);
+    }
+    const mine = m.author_name === (currentUser && currentUser.username);
+    const el = document.createElement('div');
+    el.className = 'msg ' + (mine ? 'mine' : 'theirs') + (m._pending ? ' msg-pending' : '');
+
+    let inner = '';
+    if(!mine) inner += '<div class="msg-who" style="color:var(--ink-soft)">'+escapeHtml(m.author_name)+'</div>';
+    if(m.deleted){
+      inner += '<div class="msg-bubble msg-deleted">🚫 الرسالة اتمسحت</div>';
+    }else{
+      let bubble = '';
+      if(m.lead_ref && m.lead_ref.id){
+        bubble += '<div class="msg-lead" data-lead="'+escapeHtml(m.lead_ref.id)+'" data-sec="'+escapeHtml(m.lead_ref.sec||'')+'">' +
+                  '👤 <b>'+escapeHtml(m.lead_ref.name||'متقدم')+'</b> · <span class="ltr">'+escapeHtml(m.lead_ref.phone||'')+'</span></div>';
+      }
+      bubble += escapeHtml(m.body);
+      inner += '<div class="msg-bubble">'+bubble+'</div>';
+    }
+    const t = new Date(m.created_at).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+    inner += '<div class="msg-time">' + t +
+             (m._pending ? ' · بيتبعت...' : (m._queued ? ' · في الانتظار' : '')) + '</div>';
+    if(!m.deleted && !m._pending && (mine || isOwner()) && !String(m.id).startsWith('tmp_')){
+      inner += '<button class="msg-del">حذف</button>';
+    }
+    el.innerHTML = inner;
+
+    const del = el.querySelector('.msg-del');
+    if(del) del.onclick = ()=> deleteChatMessage(m);
+    const lead = el.querySelector('.msg-lead');
+    if(lead) lead.onclick = ()=>{
+      const sec = lead.dataset.sec, id = lead.dataset.lead;
+      if(sec && sectionMap[sec]){ pushView({view:'sectionView', section: sec}); openEditSheet(id); }
+      else toast('المتقدم ده مش موجود');
+    };
+    wrap.appendChild(el);
+  });
+  if(scrollToEnd || nearBottom || chatFirstLoad){
+    wrap.scrollTop = wrap.scrollHeight;
+    chatFirstLoad = false;
+  }
+}
+async function openChat(){
+  chatFirstLoad = true;
+  renderChat(false);
+  try{
+    await fetchChat(false);
+    await flushChatQueue();
+    /* الرسايل اللي لسه في الطابور تظهر كمان */
+    queuedMessages().forEach(q=>{
+      if(!chatMessages.some(m=>m.created_at === q.at && m.body === q.body)){
+        chatMessages.push({id:'q_'+q.at, author_name:q.author_name, body:q.body,
+                           lead_ref:q.lead_ref, created_at:q.at, _queued:true});
+      }
+    });
+    renderChat(true);
+    markChatSeen();
+  }catch(e){
+    if(!chatMessages.length){
+      $('chatScroll').innerHTML = '<div class="empty-state"><div class="big">📡</div><p>مقدرناش نحمّل الرسايل.<br>' + escapeHtml(e.message) + '</p></div>';
+    }
+  }
+  startChatPolling();
+}
+function startChatPolling(){
+  stopChatPolling();
+  if(!chatAvailable()) return;
+  chatTimer = setInterval(async ()=>{
+    if(currentEntry().view !== 'chatView'){ stopChatPolling(); return; }
+    try{ await fetchChat(true); renderChat(false); markChatSeen(); }catch(e){}
+  }, 4000);
+}
+function stopChatPolling(){ if(chatTimer) clearInterval(chatTimer); chatTimer = null; }
+
+function setChatAttach(lead, sec){
+  chatAttach = {id: lead.id, name: lead.name, phone: lead.phone, sec: sec};
+  $('chatAttachBar').style.display = 'block';
+  $('chatAttachTxt').textContent = '📎 مرفق: ' + (lead.name || 'متقدم');
+}
+function clearChatAttach(){
+  chatAttach = null;
+  $('chatAttachBar').style.display = 'none';
+}
+function shareLeadToChat(){
+  if(!editingId){ toast('احفظ المتقدم الأول'); return; }
+  if(!chatAvailable()){ toast('الشات محتاج قاعدة البيانات المشتركة'); return; }
+  const f = findLead(editingId);
+  if(!f) return;
+  closeSheet();
+  setChatAttach(f.lead, f.sec);
+  pushView({view:'chatView'});
+  setTimeout(()=> $('chatInput').focus(), 150);
+}
+
+/* ================= BACKUP / RESTORE ================= */
+async function doBackup(){
+  const payload = {version:3, at: Date.now(), accounts, leads: data, sections: allSectionRecords, settings, voice:{}};
+  const ids = allLeads().filter(l=>l.voiceCount > 0).map(l=>l.id);
+  for(const id of ids){
+    const v = await loadVoiceNotes(id);
+    if(v && v.length) payload.voice[id] = v;
+  }
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadText('نسخة-احتياطية-CRM-'+stamp+'.json', JSON.stringify(payload), 'application/json');
+  toast('اتنزّلت النسخة الاحتياطية ✅');
+}
+async function doRestore(file){
+  const text = await file.text();
+  let p;
+  try{ p = JSON.parse(text); }catch(e){ toast('الملف مش صالح'); return; }
+  if(!p.leads){ toast('الملف مش نسخة احتياطية صحيحة'); return; }
+  if(!confirm('هيتم دمج النسخة دي مع البيانات الحالية. تحب تكمّل؟')) return;
+  data = mergeData(migrate(p.leads), data);
+  await Store.set(LEADS_KEY, JSON.stringify(data));
+  if(p.accounts && p.accounts.owner){
+    (p.accounts.sales||[]).forEach(s=>{
+      if(!(accounts.sales||[]).some(x=>x.username===s.username)) accounts.sales.push(s);
+    });
+    await saveAccounts();
+  }
+  if(Array.isArray(p.sections) && p.sections.length){
+    const map = new Map(allSectionRecords.map(s=>[s.id,s]));
+    p.sections.forEach(s=>{ if(!map.has(s.id)) map.set(s.id, s); });
+    allSectionRecords = [...map.values()];
+    SECTIONS = allSectionRecords.filter(s=>!s.deleted);
+    rebuildSectionMap();
+    await saveSections();
+  }
+  if(p.settings){ settings = Object.assign(settings, p.settings); await saveSettings(); }
+  if(p.voice){
+    for(const id of Object.keys(p.voice)){
+      const cur = await loadVoiceNotes(id);
+      await saveVoiceNotes(id, mergeById(cur, p.voice[id]));
+    }
+  }
+  toast('تم الاسترجاع ✅');
+  applyView();
+}
+
+/* ================= REFRESH ================= */
+async function refresh(){
+  /* نجدد الجلسة قبل ما تخلص — من غير كده القراءة بترجع فاضية بصمت */
+  if(cloudAuthActive() && CloudAuth.session){
+    try{ await CloudAuth.ensureFresh(); }catch(e){}
+  }
+  /* لو كنا أوفلاين وفي تعديلات مستنية، نحاول نرفعها أول ما النت يرجع */
+  if(Store.mode === 'cloud-offline' && navigator.onLine){
+    if(await Store.retryCloud() && Store.pending){
+      await Store.pushLocal(ALL_KEYS());
+      toast('اترفعت التعديلات المؤجلة ✅');
+    }
+  }
+  const remote = await rawLoad();
+  data = mergeData(remote, data);
+  const v = currentEntry().view;
+  /* عدّاد الرسايل الجديدة بيتحدث حتى لو مش فاتح الشات */
+  if(chatAvailable() && v !== 'chatView'){
+    try{ await fetchChat(chatMessages.length > 0); await flushChatQueue(); }catch(e){}
+  }
+  await loadSections();
+  await loadSettings();
+  if(Store.isCloud()) accounts = await loadAccounts();
+  $('storageNote').textContent = Store.label();
+  $('storageDot').className = 'dot' + (Store.isShared() ? '' : ' warn');
+  if(v === 'statsView') renderStats();
+  else if(v === 'pointsView') renderPoints();
+  else if(v === 'exportView') renderExport();
+  else if(v === 'activityView') renderActivity();
+  else if(v === 'sectionView') renderLeads();
+  else if(v === 'homeView') renderHome();
+}
+function startAutoRefresh(){
+  stopAutoRefresh();
+  if(!Store.isShared() && !Store.isCloud()) return;   /* التخزين المحلي مش محتاج polling */
+  autoTimer = setInterval(()=>{
+    if(!$('leadOverlay').classList.contains('open') && !recording) refresh();
+  }, 8000);
+}
+function stopAutoRefresh(){ if(autoTimer) clearInterval(autoTimer); autoTimer = null; }
+
+/* ================= EVENTS ================= */
+$('authBtn').onclick = handleAuthSubmit;
+$('authOwnerLink').onclick = switchToOwnerSetup;
+$('authPassword').onkeydown = e=>{ if(e.key==='Enter' && (authMode==='login' || authMode==='cloud-login')) handleAuthSubmit(); };
+$('changeMyPassBtn').onclick = changeMyPassword;
+$('logoutBtn').onclick = logout;
+$('ownerPanelBtn').onclick = ()=> pushView({view:'ownerView'});
+$('createSalesBtn').onclick = createSalesAccount;
+
+$('backBtn').onclick = popView;
+$('statsHomeBtn').onclick = ()=> pushView({view:'statsView', scope:null});
+$('statsSectionBtn').onclick = ()=>{ if(currentSection) pushView({view:'statsView', scope: currentSection}); };
+$('goExportBtn').onclick = ()=> pushView({view:'exportView', scope: statsScope});
+$('goExportHomeBtn').onclick = ()=> pushView({view:'exportView', scope:null});
+$('goActivityBtn').onclick = ()=> pushView({view:'activityView'});
+$('goImportBtn').onclick = ()=> pushView({view:'importView'});
+$('goPointsBtn').onclick = ()=> pushView({view:'pointsView'});
+$('goPointsBtn2').onclick = ()=> pushView({view:'pointsView'});
+$('goChatBtn').onclick = ()=> pushView({view:'chatView'});
+$('soundBtn').onclick = toggleSound;
+
+/* الشات */
+$('chatSendBtn').onclick = sendChatMessage;
+$('chatAttachClear').onclick = clearChatAttach;
+$('chatInput').addEventListener('input', e=>{
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 110) + 'px';
+});
+$('chatInput').addEventListener('keydown', e=>{
+  /* Enter يبعت، Shift+Enter سطر جديد — وعلى الموبايل Enter بيعمل سطر عادي */
+  if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 700){
+    e.preventDefault(); sendChatMessage();
+  }
+});
+$('shareToChatBtn').onclick = shareLeadToChat;
+
+/* نقاط وبونص */
+$('pointsPeriodRow').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  pointsMode = b.dataset.p;
+  [...$('pointsPeriodRow').children].forEach(c=>c.classList.toggle('active', c===b));
+  $('pointsMonth').style.display = pointsMode==='pick' ? 'block' : 'none';
+  if(pointsMode==='pick' && !$('pointsMonth').value) $('pointsMonth').value = new Date().toISOString().slice(0,7);
+  renderPoints();
+});
+$('pointsMonth').onchange = renderPoints;
+$('pointsExportBtn').onclick = exportPointsCsv;
+$('saveSettingsBtn').onclick = async ()=>{
+  settings.pointsPerBooking = Math.max(1, parseInt($('setPointsPer').value,10) || 1);
+  settings.pointValue = Math.max(0, parseFloat($('setPointValue').value) || 0);
+  settings.currency = $('setCurrency').value.trim() || 'جنيه';
+  await saveSettings();
+  toast('اتحفظت إعدادات البونص ✅');
+};
+
+/* إدارة الدورات */
+$('secSaveBtn').onclick = saveSection;
+$('secDeleteBtn').onclick = deleteSection;
+$('secCancelBtn').onclick = ()=> $('sectionOverlay').classList.remove('open');
+$('sectionOverlay').onclick = e=>{ if(e.target.id==='sectionOverlay') $('sectionOverlay').classList.remove('open'); };
+
+$('periodRow').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.chip'); if(!btn) return;
+  periodMode = btn.dataset.period;
+  [...$('periodRow').children].forEach(c=>c.classList.toggle('active', c===btn));
+  $('periodMonthInput').style.display = periodMode==='month' ? 'block' : 'none';
+  $('periodYearInput').style.display  = periodMode==='year'  ? 'block' : 'none';
+  if(periodMode==='month' && !$('periodMonthInput').value){ $('periodMonthInput').value = new Date().toISOString().slice(0,7); }
+  if(periodMode==='year'  && !$('periodYearInput').value){  $('periodYearInput').value  = new Date().getFullYear(); }
+  renderStats();
+});
+$('periodMonthInput').onchange = renderStats;
+$('periodYearInput').oninput = renderStats;
+
+/* activity */
+$('actPeriodRow').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  actPeriod = b.dataset.p;
+  [...$('actPeriodRow').children].forEach(c=>c.classList.toggle('active', c===b));
+  $('actCustomWrap').style.display = actPeriod==='custom' ? 'block' : 'none';
+  renderActivity();
+});
+$('actMethodRow').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  actMethod = b.dataset.m;
+  [...$('actMethodRow').children].forEach(c=>c.classList.toggle('active', c===b));
+  renderActivity();
+});
+$('actFrom').onchange = renderActivity;
+$('actTo').onchange = renderActivity;
+$('actSearch').oninput = e=>{ actSearch = e.target.value; renderActivity(); };
+$('actExportBtn').onclick = exportActivityCsv;
+
+/* export */
+$('expPresetRow').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  [...$('expPresetRow').children].forEach(c=>c.classList.toggle('active', c===b));
+  applyPreset(b.dataset.preset);
+});
+$('expGov').onchange = renderExport;
+$('expAgent').onchange = renderExport;
+$('expFrom').onchange = renderExport;
+$('expTo').onchange = renderExport;
+$('expFormat').onchange = ()=>{};
+$('expDedup').onchange = e=>{ expDedup = e.target.checked; renderExport(); };
+
+$('copyNumbersBtn').onclick = ()=>{
+  const leads = getExportLeads();
+  if(!leads.length){ toast('مفيش أرقام في الفلتر ده'); return; }
+  copyText(buildExportText(leads, $('expFormat').value), 'اتنسخ ' + leads.length + ' رقم ✅');
+};
+$('downloadNumbersBtn').onclick = ()=>{
+  const leads = getExportLeads();
+  if(!leads.length){ toast('مفيش أرقام في الفلتر ده'); return; }
+  const fmt = $('expFormat').value;
+  downloadText('ارقام-المتقدمين.txt', buildExportText(leads, fmt === 'csv' ? 'name_phone' : fmt));
+  toast('اتنزّل الملف ✅');
+};
+$('downloadCsvBtn').onclick = ()=>{
+  const leads = getExportLeads();
+  if(!leads.length){ toast('مفيش أرقام في الفلتر ده'); return; }
+  downloadText('المتقدمين.csv', exportCsvText(leads), 'text/csv');
+  toast('اتنزّل ملف Excel ✅');
+};
+$('downloadVcfBtn').onclick = ()=>{
+  const leads = getExportLeads();
+  if(!leads.length){ toast('مفيش أرقام في الفلتر ده'); return; }
+  downloadText('جهات-الاتصال.vcf', buildVcf(leads), 'text/vcard');
+  toast('اتنزّل ملف جهات الاتصال ✅');
+};
+
+/* import */
+$('impRunBtn').onclick = runImport;
+$('impFile').onchange = async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  $('impText').value = await f.text();
+  toast('اتقرأ الملف — راجع الأرقام واضغط استيراد');
+};
+
+/* backup */
+$('cloudTestBtn').onclick = testAndSaveCloud;
+$('cloudClearBtn').onclick = clearCloud;
+$('cloudPushBtn').onclick = pushLocalToCloud;
+
+$('backupBtn').onclick = doBackup;
+$('restoreBtn').onclick = ()=> $('restoreFile').click();
+$('restoreFile').onchange = e=>{ const f = e.target.files[0]; if(f) doRestore(f); e.target.value=''; };
+
+/* lead sheet */
+$('voiceRecordBtn').onclick = ()=>{ recording ? stopRecording() : startRecording(); };
+$('recStopBtn').onclick = stopRecording;
+$('recCancelBtn').onclick = cancelRecording;
+$('addNoteBtn').onclick = addTextNote;
+$('addContactBtn').onclick = openContactSheet;
+$('contactCancelBtn').onclick = ()=> $('contactOverlay').classList.remove('open');
+$('contactSaveBtn').onclick = saveManualContact;
+$('contactOverlay').onclick = e=>{ if(e.target.id==='contactOverlay') $('contactOverlay').classList.remove('open'); };
+
+$('fabBtn').onclick = ()=>{
+  if(currentEntry().view === 'homeView'){
+    if(isOwner()) openSectionSheet(null);
+    else toast('اختر الدورة الأول عشان تضيف متقدم');
+    return;
+  }
+  if(currentEntry().view !== 'sectionView' || !currentSection){ toast('اختر القسم الأول من الصفحة الرئيسية'); return; }
+  openAddSheet();
+};
+$('cancelBtn').onclick = closeSheet;
+$('saveBtn').onclick = saveLead;
+$('deleteBtn').onclick = deleteLead;
+$('leadOverlay').onclick = (e)=>{ if(e.target.id==='leadOverlay') closeSheet(); };
+$('refreshBtn').onclick = refresh;
+$('searchInput').oninput = (e)=>{ searchTerm = e.target.value; renderLeads(); };
+
+/* ================= INIT ================= */
+/* تسجيل الـ Service Worker — بيخلي البرنامج يشتغل أوفلاين وقابل للتثبيت كتطبيق */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW skipped', e));
+  });
+}
+(async function init(){
+  try{
+    await Store.detect();
+    /* في وضع السحابة مابنقراش أي بيانات قبل تسجيل الدخول — قاعدة البيانات هترفض وده صح */
+    if(!cloudAuthActive()){
+      await loadSections();
+      await loadSettings();
+    }
+  }catch(e){
+    console.error('init failed', e);
+    /* حتى لو التخزين فشل، لازم شاشة الدخول تظهر */
+  }
+  $('storageNote').textContent = Store.label();
+  $('storageDot').className = 'dot' + (Store.isShared() ? '' : ' warn');
+  accounts = await loadAccounts();
+  renderAuthScreen();
+
+  /* لو في جلسة محفوظة وسارية، ندخل على طول من غير ما نسأل تاني */
+  if(cloudAuthActive()){
+    const s = CloudAuth.loadSession();
+    if(s && s.access_token){
+      try{
+        await CloudAuth.ensureFresh();
+        const prof = await CloudAuth.fetchProfile();
+        if(prof && prof.role !== 'disabled'){
+          await afterLogin({username: prof.username, role: prof.role, email: prof.email});
+          return;
+        }
+        if(prof && prof.role === 'disabled') await CloudAuth.signOut();
+      }catch(e){
+        /* الجلسة مش صالحة أو مفيش نت — يكمّل على شاشة الدخول */
+        console.log('session restore skipped', e.message);
+      }
+    }
+  }
+})();
+</script>
+</body>
+</html>
