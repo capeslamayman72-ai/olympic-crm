@@ -504,8 +504,14 @@
 
     <div class="auth-error" id="authError"></div>
     <button class="btn btn-primary" id="authBtn" style="width:100%;margin-top:16px;">دخول</button>
+
+    <div id="authHint" style="display:none;font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8;">
+      بياناتك بتوصلك من مدير الحساب.<br>
+      نسيت كلمة المرور؟ كلّم المدير.
+    </div>
+
     <button id="authOwnerLink" style="display:none;width:100%;margin-top:12px;font-size:12px;color:var(--muted);text-decoration:underline;">
-      أول تشغيل للسيرفر؟ إنشاء حساب المالك
+      إنشاء حساب المالك (تجهيز أولي)
     </button>
   </div>
 </div>
@@ -525,6 +531,7 @@
     <span id="userBarText"></span>
     <div class="user-bar-actions">
       <button class="user-bar-btn" id="soundBtn" title="صوت الإنجاز">🔊</button>
+      <button class="user-bar-btn" id="myPassBtn" style="display:none;" title="تغيير كلمة المرور">🔑</button>
       <button class="user-bar-btn" id="ownerPanelBtn" style="display:none;">إدارة الحسابات</button>
       <button class="user-bar-btn" id="logoutBtn">خروج</button>
     </div>
@@ -922,6 +929,25 @@
     <div class="celebrate-pts" id="celebratePts">+1 نقطة</div>
     <div class="celebrate-txt">تم الحجز — مبروك!</div>
     <div class="celebrate-name" id="celebrateName"></div>
+  </div>
+</div>
+
+<!-- تغيير كلمة المرور — متاح لأي مستخدم -->
+<div class="overlay" id="passOverlay">
+  <div class="sheet" style="max-width:400px;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">تغيير كلمة المرور</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:6px;">
+      بعد التغيير هتحتاج تسجّل دخول تاني على أي جهاز تاني بتستخدمه.
+    </div>
+    <div class="field-label">كلمة المرور الجديدة</div>
+    <input class="field-input ltr" id="passNew" type="password" dir="ltr" placeholder="8 حروف/أرقام على الأقل">
+    <div class="field-label">تأكيد كلمة المرور</div>
+    <input class="field-input ltr" id="passNew2" type="password" dir="ltr" placeholder="اكتبها تاني">
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="passCancelBtn">إلغاء</button>
+      <button class="btn btn-primary" id="passSaveBtn">حفظ</button>
+    </div>
   </div>
 </div>
 
@@ -1702,9 +1728,30 @@ const CloudAuth = {
       return false;
     }
   },
+  /* لازم نجيب صف المستخدم الحالي بالتحديد.
+     أي عضو في الفريق بيقدر يقرا كل الحسابات (عشان قوايم الفلاتر)،
+     فلو جبنا أول صف من غير فلتر ممكن نرجّع حساب حد تاني وناخد صلاحياته. */
+  /* رقم المستخدم من رد تسجيل الدخول، وإلا من داخل التوكن نفسه */
+  myUserId(){
+    if(this.session && this.session.user && this.session.user.id) return this.session.user.id;
+    try{
+      const p = JSON.parse(atob(this.session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      return p.sub || null;
+    }catch(e){ return null; }
+  },
   async fetchProfile(){
-    const rows = await Store.rest('profiles?select=id,username,role,email&limit=1');
-    this.profile = (rows && rows[0]) || null;
+    const uid = this.myUserId();
+    if(!uid){ this.profile = null; return null; }
+    const rows = await Store.rest(
+      'profiles?select=id,username,role,email&id=eq.' + encodeURIComponent(uid) + '&limit=1');
+    const row = (rows && rows[0]) || null;
+    /* حماية إضافية: لو رجع صف مش بتاعنا نرفضه */
+    if(row && row.id !== uid){
+      console.error('profile mismatch — rejected');
+      this.profile = null;
+      return null;
+    }
+    this.profile = row;
     return this.profile;
   },
   async changeMyPassword(newPass){
@@ -1754,17 +1801,26 @@ Store.setTokenRefresher(()=> CloudAuth.refreshSession());
    وفي الوضع المحلي بالحسابات المخزنة على الجهاز */
 function cloudAuthActive(){ return Store.hasCloudConfig(); }
 
+/* رابط إنشاء حساب المالك بيظهر بس لما تفتح الصفحة بـ ?setup=1
+   — أو بالضغط المطوّل على الشعار. عشان السيلز ما يشوفوش كلام تجهيز
+   ملهمش دعوة بيه. */
+function setupModeOn(){
+  try{ return new URLSearchParams(location.search).has('setup'); }catch(e){ return false; }
+}
+let revealSetup = false;
+
 function renderAuthScreen(){
   const cloudy = cloudAuthActive();
   $('authUsername').type = cloudy ? 'email' : 'text';
   $('authUsername').placeholder = cloudy ? 'name@example.com' : 'username';
   $('authUserLabel').textContent = cloudy ? 'البريد الإلكتروني' : 'اسم المستخدم';
-  $('authOwnerLink').style.display = cloudy ? 'block' : 'none';
+  $('authOwnerLink').style.display = (cloudy && (setupModeOn() || revealSetup)) ? 'block' : 'none';
   $('authNameWrap').style.display = 'none';
+  $('authHint').style.display = cloudy ? 'block' : 'none';
 
   if(cloudy){
     authMode = 'cloud-login';
-    $('authSub').textContent = 'نظام متابعة المتقدمين — سجّل دخولك بالبريد وكلمة المرور اللي وصلتك من المالك';
+    $('authSub').textContent = 'نظام متابعة المتقدمين للدورات التدريبية';
     $('authConfirmWrap').style.display = 'none';
     $('authBtn').textContent = 'دخول';
   }else if(!accounts.owner){
@@ -1898,6 +1954,7 @@ async function afterLogin(user){
   $('appTopbar').style.display = 'block';
   $('userBarText').textContent = (user.role==='owner' ? '👑 المالك' : '👤 السيلز') + ' — ' + user.username;
   $('ownerPanelBtn').style.display = user.role==='owner' ? 'inline-flex' : 'none';
+  $('myPassBtn').style.display = cloudAuthActive() ? 'inline-flex' : 'none';
   $('soundBtn').textContent = soundOn ? '🔊' : '🔇';
   /* أسماء الفريق بتيجي من جدول الحسابات عشان الفلاتر والتقارير */
   if(cloudAuthActive() && Store.mode === 'cloud'){
@@ -1934,8 +1991,15 @@ const VIEW_IDS = ['homeView','sectionView','statsView','activityView','exportVie
 function pushView(entry){ navStack.push(entry); applyView(); }
 function popView(){ if(navStack.length > 1){ navStack.pop(); applyView(); } }
 function currentEntry(){ return navStack[navStack.length-1] || {view:'homeView'}; }
+/* شاشات المالك بس — إخفاء الزرار لوحده مش كفاية */
+const OWNER_ONLY_VIEWS = ['ownerView', 'importView'];
 function applyView(){
-  const e = currentEntry();
+  let e = currentEntry();
+  if(OWNER_ONLY_VIEWS.includes(e.view) && !isOwner()){
+    navStack = [{view:'homeView'}];
+    e = currentEntry();
+    toast('الصفحة دي للمالك بس');
+  }
   if(e.view !== 'chatView') stopChatPolling();
   VIEW_IDS.forEach(id => $(id).style.display = (id === e.view) ? (id === 'chatView' ? 'flex' : 'block') : 'none');
   $('backBtn').style.display = navStack.length > 1 ? 'flex' : 'none';
@@ -2049,6 +2113,28 @@ async function toggleAccountDisabled(p){
     renderCloudAccounts();
   }catch(e){ alert('فشل التعديل: ' + e.message); }
 }
+/* رسالة جاهزة للواتساب فيها البيانات وخطوات التثبيت */
+function appLink(){
+  return location.origin + location.pathname.replace(/[^/]*$/, '');
+}
+function buildWelcomeMessage(name, email, password){
+  return (
+'المعهد الأوليمبي الدولي لعلوم الرياضة\n' +
+'نظام متابعة المتقدمين\n' +
+'━━━━━━━━━━━━━━━\n\n' +
+'أهلاً ' + name + ' 👋\n' +
+'دي بيانات دخولك:\n\n' +
+'🔗 الرابط:\n' + appLink() + '\n\n' +
+'📧 البريد: ' + email + '\n' +
+'🔑 كلمة المرور: ' + password + '\n\n' +
+'━━━━━━━━━━━━━━━\n' +
+'📲 عشان تثبته كتطبيق على موبايلك:\n\n' +
+'• أندرويد: افتح الرابط من Chrome ← اضغط النقط التلاتة فوق ⋮ ← «تثبيت التطبيق»\n\n' +
+'• أيفون: افتح الرابط من Safari ← زرار المشاركة ← «إضافة إلى الشاشة الرئيسية»\n\n' +
+'⚠️ أول مرة تسجّل دخول لازم يكون النت شغال. بعد كده التطبيق هيفتح عادي من غير نت.\n\n' +
+'💡 يفضّل تغيّر كلمة المرور بعد أول دخول من «إدارة الحسابات».'
+  );
+}
 async function createCloudSalesAccount(){
   const name  = $('newSalesUsername').value.trim();
   const email = $('newSalesEmail').value.trim().toLowerCase();
@@ -2071,12 +2157,15 @@ async function createCloudSalesAccount(){
     box.innerHTML = 'اتعمل الحساب بنجاح. ابعت البيانات دي للسيلز:' +
       '<br><span class="ltr">' + escapeHtml(email) + '</span>' +
       '<div class="pass-box ltr">' + escapeHtml(password) + '</div>' +
-      '<button class="btn btn-ghost btn-sm" id="copyCredsBtn" style="margin-top:8px;">📋 نسخ البيانات</button>';
-    $('copyCredsBtn').onclick = ()=> copyText(
-      'بيانات دخولك على نظام متابعة المتقدمين:\n' +
-      'الرابط: ' + location.origin + location.pathname + '\n' +
-      'البريد: ' + email + '\n' +
-      'كلمة المرور: ' + password, 'اتنسخت البيانات ✅');
+      '<div style="display:flex;gap:8px;margin-top:10px;">' +
+        '<button class="btn btn-ghost btn-sm" id="copyCredsBtn">📋 نسخ الرسالة</button>' +
+        '<button class="btn btn-sm" id="waCredsBtn" style="background:#25D366;color:#fff;">🟢 إرسال واتساب</button>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.7;">' +
+        'الرسالة فيها البيانات وخطوات تثبيت التطبيق على الموبايل.</div>';
+    $('copyCredsBtn').onclick = ()=> copyText(buildWelcomeMessage(name, email, password), 'اتنسخت الرسالة ✅');
+    $('waCredsBtn').onclick = ()=>
+      window.open('https://wa.me/?text=' + encodeURIComponent(buildWelcomeMessage(name, email, password)), '_blank');
     $('newSalesUsername').value = '';
     $('newSalesEmail').value = '';
     renderCloudAccounts();
@@ -3770,8 +3859,43 @@ function stopAutoRefresh(){ if(autoTimer) clearInterval(autoTimer); autoTimer = 
 /* ================= EVENTS ================= */
 $('authBtn').onclick = handleAuthSubmit;
 $('authOwnerLink').onclick = switchToOwnerSetup;
+
+/* ضغطة مطوّلة (3 ثواني) على الشعار بتظهر رابط التجهيز — للطوارئ من الموبايل */
+(function(){
+  const badge = document.querySelector('.auth-badge');
+  if(!badge) return;
+  let t = null;
+  const start = ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=>{
+      revealSetup = true;
+      $('authOwnerLink').style.display = 'block';
+      toast('ظهر رابط التجهيز الأولي');
+    }, 3000);
+  };
+  const stop = ()=> clearTimeout(t);
+  badge.addEventListener('mousedown', start);
+  badge.addEventListener('touchstart', start, {passive:true});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(e=>badge.addEventListener(e, stop));
+})();
 $('authPassword').onkeydown = e=>{ if(e.key==='Enter' && (authMode==='login' || authMode==='cloud-login')) handleAuthSubmit(); };
 $('changeMyPassBtn').onclick = changeMyPassword;
+$('myPassBtn').onclick = ()=>{
+  $('passNew').value = ''; $('passNew2').value = '';
+  $('passOverlay').classList.add('open');
+};
+$('passCancelBtn').onclick = ()=> $('passOverlay').classList.remove('open');
+$('passOverlay').onclick = e=>{ if(e.target.id==='passOverlay') $('passOverlay').classList.remove('open'); };
+$('passSaveBtn').onclick = async ()=>{
+  const a = $('passNew').value, b = $('passNew2').value;
+  if(a.length < 8){ toast('كلمة المرور لازم 8 حروف/أرقام على الأقل'); return; }
+  if(a !== b){ toast('التأكيد مش مطابق'); return; }
+  try{
+    await CloudAuth.changeMyPassword(a);
+    $('passOverlay').classList.remove('open');
+    toast('اتغيّرت كلمة المرور ✅');
+  }catch(e){ alert('فشل التغيير: ' + translateAuthError(e)); }
+};
 $('logoutBtn').onclick = logout;
 $('ownerPanelBtn').onclick = ()=> pushView({view:'ownerView'});
 $('createSalesBtn').onclick = createSalesAccount;
