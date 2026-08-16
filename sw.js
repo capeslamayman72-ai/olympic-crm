@@ -1,5 +1,5 @@
 /* Service Worker — يخلي البرنامج يفتح من غير نت ويبقى قابل للتثبيت كتطبيق أندرويد */
-const CACHE = 'olympic-crm-v2';
+const CACHE = 'olympic-crm-v3';
 const ASSETS = [
   './',
   './index.html',
