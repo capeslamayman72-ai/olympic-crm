@@ -396,6 +396,27 @@
   .rep-sum-n{font-size:19px;font-weight:800;color:var(--gold);}
   .rep-sum-l{font-size:10.5px;color:#C8D0E0;margin-top:2px;}
 
+  /* ===== تفصيل يومي ===== */
+  .day-tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+  .day-tbl th{
+    background:var(--ink);color:#fff;font-weight:700;padding:7px 4px;
+    font-size:10.5px;white-space:nowrap;position:sticky;top:0;
+  }
+  .day-tbl td{
+    padding:7px 4px;text-align:center;border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .day-tbl tr:last-child td{border-bottom:none;}
+  .day-tbl .d-name{text-align:right;font-weight:700;font-size:11px;}
+  .day-tbl .d-tot{background:var(--paper);font-weight:800;}
+  .day-tbl tfoot td{background:#EAF7EF;font-weight:800;color:var(--ink);border-top:2px solid var(--green);}
+  .day-wrap{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;
+  }
+  .day-scroll{max-height:60vh;overflow:auto;}
+  .day-today td{background:#FFF7E6;}
+
   /* ===== نقاط وبونص ===== */
   .rank-row{
     background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -824,6 +845,9 @@
 <div id="reportView" style="display:none;">
   <div class="toolbar">
     <div class="period-row" id="repPeriodRow">
+      <button class="chip" data-p="today">النهارده</button>
+      <button class="chip" data-p="yday">امبارح</button>
+      <button class="chip" data-p="7">آخر 7 أيام</button>
       <button class="chip active" data-p="30">آخر 30 يوم</button>
       <button class="chip" data-p="month">الشهر ده</button>
       <button class="chip" data-p="prev">الشهر اللي فات</button>
@@ -838,6 +862,7 @@
         <input type="date" class="field-input" id="repTo">
       </div>
     </div>
+    <select class="field-input" id="repAgent" style="margin-bottom:10px;"></select>
   </div>
   <div class="list-wrap">
     <div id="repRange" style="font-size:11.5px;color:var(--muted);text-align:center;margin-bottom:12px;"></div>
@@ -846,6 +871,7 @@
       <button class="btn btn-ghost btn-sm" id="repCsvBtn">📊 تنزيل CSV</button>
       <button class="btn btn-ghost btn-sm" id="repCopyBtn">📋 نسخ ملخص</button>
     </div>
+    <div id="repDaily"></div>
     <div id="repList"></div>
   </div>
 </div>
@@ -4007,6 +4033,9 @@ let repPeriod = '30';
 function repRange(){
   const now = Date.now(), d = new Date();
   const day0 = new Date(); day0.setHours(0,0,0,0);
+  if(repPeriod === 'today') return [day0.getTime(), now];
+  if(repPeriod === 'yday')  return [day0.getTime() - 86400000, day0.getTime() - 1];
+  if(repPeriod === '7')     return [day0.getTime() - 6*86400000, now];
   if(repPeriod === '30')    return [day0.getTime() - 29*86400000, now];
   if(repPeriod === 'month') return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), now];
   if(repPeriod === 'prev')  return [new Date(d.getFullYear(), d.getMonth()-1, 1).getTime(),
@@ -4071,10 +4100,107 @@ function buildAgentReport(from, to){
     return y.bookings - x.bookings || y.contacts - x.contacts || y.leadCount - x.leadCount;
   });
 }
+/* تفصيل يوم بيوم لسيلز معيّن */
+function buildDailyBreakdown(name, from, to){
+  const days = {};
+  const keyOf = function(ts){
+    const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime();
+  };
+  const ensure = function(k){
+    if(!days[k]) days[k] = {day:k, call:0, wa:0, sms:0, visit:0, other:0,
+                            contacts:0, leads:{}, bookings:0, revenue:0};
+    return days[k];
+  };
+  allLeads().forEach(function(l){
+    (l.history||[]).forEach(function(h){
+      if(h.deleted || h.by !== name) return;
+      if(!CONTACT_METHODS.includes(h.method)) return;
+      const at = h.at || 0;
+      if(at < from || at > to) return;
+      const rec = ensure(keyOf(at));
+      rec.contacts++;
+      rec.leads[l.id] = 1;
+      if(rec[h.method] !== undefined) rec[h.method]++; else rec.other++;
+    });
+    if(l.status === 'booked' && l.bookedBy === name){
+      const at = l.bookedAt || l.updatedAt || 0;
+      if(at >= from && at <= to){
+        const rec = ensure(keyOf(at));
+        rec.bookings++;
+        rec.revenue += Number(l.bookingAmount) || 0;
+      }
+    }
+  });
+  return Object.values(days)
+    .map(function(r){ r.leadCount = Object.keys(r.leads).length; return r; })
+    .sort(function(a,b){ return b.day - a.day; });
+}
+function renderDailyBreakdown(name, from, to){
+  const wrap = $('repDaily');
+  if(!name){ wrap.innerHTML = ''; return; }
+  const rows = buildDailyBreakdown(name, from, to);
+  const cur = escapeHtml(settings.currency || 'جنيه');
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+
+  if(!rows.length){
+    wrap.innerHTML = '<div class="day-wrap"><div style="padding:18px;text-align:center;' +
+      'font-size:12.5px;color:var(--muted);">مفيش نشاط لـ «' + escapeHtml(name) + '» في الفترة دي</div></div>';
+    return;
+  }
+  const T = rows.reduce(function(t,r){
+    t.call+=r.call; t.wa+=r.wa; t.sms+=r.sms; t.visit+=r.visit;
+    t.contacts+=r.contacts; t.bookings+=r.bookings; t.revenue+=r.revenue;
+    return t;
+  }, {call:0,wa:0,sms:0,visit:0,contacts:0,bookings:0,revenue:0});
+
+  const body = rows.slice(0, 92).map(function(r){
+    const d = new Date(r.day);
+    const isToday = r.day === today0.getTime();
+    const label = d.toLocaleDateString('ar-EG', {weekday:'short', day:'numeric', month:'short'});
+    return '<tr' + (isToday ? ' class="day-today"' : '') + '>' +
+      '<td class="d-name">' + (isToday ? '⭐ ' : '') + escapeHtml(label) + '</td>' +
+      '<td>' + (r.call || '—') + '</td>' +
+      '<td>' + (r.wa || '—') + '</td>' +
+      '<td>' + (r.sms || '—') + '</td>' +
+      '<td>' + (r.visit || '—') + '</td>' +
+      '<td class="d-tot">' + r.contacts + '</td>' +
+      '<td>' + (r.bookings || '—') + '</td>' +
+      '<td>' + (r.revenue ? money(r.revenue) : '—') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="stats-sub-title">📅 تفصيل يومي — ' + escapeHtml(name) + '</div>' +
+    '<div class="day-wrap"><div class="day-scroll"><table class="day-tbl">' +
+      '<thead><tr>' +
+        '<th>اليوم</th><th>📞</th><th>🟢</th><th>✉️</th><th>🤝</th>' +
+        '<th>الإجمالي</th><th>✅ حجز</th><th>💰 ' + cur + '</th>' +
+      '</tr></thead>' +
+      '<tbody>' + body + '</tbody>' +
+      '<tfoot><tr>' +
+        '<td class="d-name">الإجمالي</td>' +
+        '<td>' + T.call + '</td><td>' + T.wa + '</td><td>' + T.sms + '</td><td>' + T.visit + '</td>' +
+        '<td>' + T.contacts + '</td><td>' + T.bookings + '</td><td>' + money(T.revenue) + '</td>' +
+      '</tr></tfoot>' +
+    '</table></div></div>' +
+    (rows.length > 92 ? '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px;">' +
+        'معروض أول 92 يوم من ' + rows.length + '</div>' : '');
+}
+
 function renderReport(){
   const r = repRange(), from = r[0], to = r[1];
+  /* قائمة السيلز في الفلتر */
+  const sel = $('repAgent');
+  const keep = sel.value;
+  const names = agentNames();
+  sel.innerHTML = '<option value="">👥 كل الفريق</option>' +
+    names.map(function(n){ return '<option value="' + escapeHtml(n) + '">👤 ' + escapeHtml(n) + '</option>'; }).join('');
+  if(keep && names.includes(keep)) sel.value = keep;
+  const only = sel.value;
+
   const rows = buildAgentReport(from, to);
-  const active = rows.filter(function(a){ return a.contacts > 0 || a.bookings > 0 || a.statusChanges > 0; });
+  let active = rows.filter(function(a){ return a.contacts > 0 || a.bookings > 0 || a.statusChanges > 0; });
+  if(only) active = rows.filter(function(a){ return a.name === only; });
   const cur = escapeHtml(settings.currency || 'جنيه');
 
   $('repRange').innerHTML = 'الفترة: <b>' +
@@ -4088,7 +4214,8 @@ function renderReport(){
   }, {call:0,wa:0,sms:0,visit:0,contacts:0,bookings:0,revenue:0,bonus:0});
 
   $('repSummary').innerHTML =
-    '<div style="font-size:13px;font-weight:800;">ملخص الفريق (' + active.length + ' سيلز)</div>' +
+    '<div style="font-size:13px;font-weight:800;">' +
+      (only ? 'ملخص: ' + escapeHtml(only) : 'ملخص الفريق (' + active.length + ' سيلز)') + '</div>' +
     '<div class="rep-sum-grid">' +
       '<div class="rep-sum-cell"><div class="rep-sum-n">' + T.contacts + '</div><div class="rep-sum-l">إجمالي التواصلات</div></div>' +
       '<div class="rep-sum-cell"><div class="rep-sum-n">' + T.bookings + '</div><div class="rep-sum-l">الحجوزات</div></div>' +
@@ -4098,9 +4225,13 @@ function renderReport(){
     '<div style="font-size:11px;color:#C8D0E0;margin-top:10px;line-height:1.7;">' +
       '📞 ' + T.call + ' مكالمة · 🟢 ' + T.wa + ' واتساب · ✉️ ' + T.sms + ' رسالة · 🤝 ' + T.visit + ' مقابلة</div>';
 
+  renderDailyBreakdown(only, from, to);
+
   const wrap = $('repList');
   if(!active.length){
-    wrap.innerHTML = '<div class="empty-state"><div class="big">📈</div><p>مفيش نشاط في الفترة دي.</p></div>';
+    wrap.innerHTML = only
+      ? ''
+      : '<div class="empty-state"><div class="big">📈</div><p>مفيش نشاط في الفترة دي.</p></div>';
     return;
   }
   wrap.innerHTML = active.map(function(a, i){
@@ -4147,12 +4278,29 @@ function exportReportCsv(){
   const to = new Date(r[1]).toLocaleDateString('ar-EG');
   body.push([]);
   body.push(['الفترة', from + ' إلى ' + to]);
-  downloadText('تقرير-اداء-السيلز.csv', toCsv([head].concat(body)), 'text/csv');
+  const only = $('repAgent').value;
+  if(only){
+    const daily = buildDailyBreakdown(only, r[0], r[1]);
+    body.push([]);
+    body.push(['تفصيل يومي — ' + only]);
+    body.push(['اليوم','مكالمات','واتساب','رسائل','مقابلات','إجمالي التواصل','حجوزات','الإيراد (' + cur + ')']);
+    daily.forEach(function(x){
+      const d = new Date(x.day);
+      body.push([
+        d.toLocaleDateString('ar-EG', {weekday:'long', day:'numeric', month:'long', year:'numeric'}),
+        x.call, x.wa, x.sms, x.visit, x.contacts, x.bookings, x.revenue
+      ]);
+    });
+  }
+  downloadText(only ? ('تقرير-' + only + '.csv') : 'تقرير-اداء-السيلز.csv',
+               toCsv([head].concat(body)), 'text/csv');
   toast('اتنزّل التقرير ✅');
 }
 function copyReportSummary(){
   const r = repRange();
-  const rows = buildAgentReport(r[0], r[1]).filter(function(a){ return a.contacts>0 || a.bookings>0; });
+  const onlyC = $('repAgent').value;
+  let rows = buildAgentReport(r[0], r[1]).filter(function(a){ return a.contacts>0 || a.bookings>0; });
+  if(onlyC) rows = rows.filter(function(a){ return a.name === onlyC; });
   if(!rows.length){ toast('مفيش بيانات في الفترة دي'); return; }
   const cur = settings.currency || 'جنيه';
   const from = r[0] ? new Date(r[0]).toLocaleDateString('ar-EG') : 'البداية';
@@ -4953,6 +5101,7 @@ $('repPeriodRow').addEventListener('click', e=>{
   renderReport();
 });
 $('repMonth').onchange = renderReport;
+$('repAgent').onchange = renderReport;
 $('repFrom').onchange = renderReport;
 $('repTo').onchange = renderReport;
 $('repCsvBtn').onclick = exportReportCsv;
