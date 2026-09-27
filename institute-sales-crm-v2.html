@@ -346,6 +346,25 @@
   }
   .toast.show{opacity:1;}
 
+  /* ===== حالة الاتصال ===== */
+  .pres{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;font-weight:700;margin-top:4px;
+  }
+  .pres-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .pres.on   { color:var(--green); }
+  .pres.on   .pres-dot{ background:#25D366; box-shadow:0 0 0 3px rgba(37,211,102,.18); }
+  .pres.idle { color:var(--gold); }
+  .pres.idle .pres-dot{ background:var(--gold); }
+  .pres.off  { color:var(--muted); }
+  .pres.off  .pres-dot{ background:#C3CAD6; }
+  .pres-sub{font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px;}
+  .online-bar{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;margin-bottom:12px;font-size:12.5px;font-weight:700;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+
   /* ===== تقرير الأداء ===== */
   .rep-card{
     background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -2133,10 +2152,12 @@ async function afterLogin(user){
   navStack = [{view:'homeView'}];
   applyView();
   startAutoRefresh();
+  startPresence();
 }
 async function logout(){
   stopAutoRefresh();
   stopChatPolling();
+  stopPresence();
   if(cloudAuthActive()){
     if(!confirm('هيتم تسجيل الخروج ومسح بيانات الدخول من الجهاز ده.\nهتحتاج نت عشان تدخل تاني. تكمّل؟')) {
       startAutoRefresh(); return;
@@ -2247,6 +2268,7 @@ async function renderCloudAccounts(){
   try{
     cloudProfiles = await Store.rest('profiles?select=id,username,role,email&order=created_at.asc') || [];
     cloudProfiles = cloudProfiles.filter(p => p.role !== 'removed');   /* المحذوفين مش بيظهروا */
+    await loadPresence();
   }catch(e){
     wrap.innerHTML = '<div style="font-size:12.5px;color:var(--danger);">مقدرناش نحمّل الحسابات: ' + escapeHtml(e.message) + '</div>';
     return;
@@ -2255,7 +2277,17 @@ async function renderCloudAccounts(){
     wrap.innerHTML = '<div class="empty-state" style="padding:24px 10px;"><p>مفيش حسابات لسه.</p></div>';
     return;
   }
-  wrap.innerHTML = '';
+  const onlineNow = cloudProfiles.filter(function(p){
+    const e = presenceMap[p.id];
+    return e && (Date.now() - (e.at||0)) < PRESENCE_ONLINE_MS;
+  });
+  wrap.innerHTML =
+    '<div class="online-bar">' +
+      '<span class="pres-dot" style="background:' + (onlineNow.length ? '#25D366' : '#C3CAD6') + ';"></span>' +
+      (onlineNow.length
+        ? 'متصل دلوقتي: ' + onlineNow.map(function(x){ return escapeHtml(x.username); }).join(' · ')
+        : 'مفيش حد متصل دلوقتي') +
+    '</div>';
   cloudProfiles.forEach(p=>{
     const isMe = CloudAuth.profile && p.id === CloudAuth.profile.id;
     const roleLabel = p.role === 'owner' ? '👑 مالك' : (p.role === 'disabled' ? '🚫 موقوف' : '👤 سيلز');
@@ -2266,6 +2298,7 @@ async function renderCloudAccounts(){
         '<b>' + escapeHtml(p.username) + '</b>' +
         '<div style="font-size:11px;margin-top:2px;" class="ltr">' + escapeHtml(p.email || '') + '</div>' +
         '<div style="font-size:11px;margin-top:2px;">' + roleLabel + (isMe ? ' — أنت' : '') + '</div>' +
+        presenceHtml(p.id) +
       '</div>' +
       (isMe || p.role === 'owner' ? '' :
         '<div class="account-actions">' +
@@ -3841,6 +3874,86 @@ async function reloadEverything(){
   applyView();
 }
 
+/* ================= حالة الاتصال وآخر ظهور =================
+   بنسجّل نبضة كل دقيقة في نفس جدول البيانات المشترك —
+   من غير أي تعديل على قاعدة البيانات.
+========================================================= */
+const PRESENCE_KEY = 'crm-presence-v1';
+const PRESENCE_BEAT_MS   = 60000;    /* نبضة كل دقيقة */
+const PRESENCE_ONLINE_MS = 180000;   /* أقل من 3 دقايق = متصل دلوقتي */
+const PRESENCE_IDLE_MS   = 900000;   /* أقل من 15 دقيقة = من شوية */
+let presenceMap = {};
+let presenceTimer = null;
+let sessionStartedAt = 0;
+
+function myPresenceId(){
+  if(CloudAuth.profile && CloudAuth.profile.id) return CloudAuth.profile.id;
+  return currentUser ? ('u:' + currentUser.username) : null;
+}
+function deviceKind(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'موبايل' : 'كمبيوتر';
+}
+async function loadPresence(){
+  try{
+    const raw = await Store.get(PRESENCE_KEY);
+    presenceMap = raw ? (JSON.parse(raw) || {}) : {};
+  }catch(e){ presenceMap = {}; }
+  return presenceMap;
+}
+/* الدمج مهم: أكتر من واحد بيكتبوا نفس المفتاح في نفس الوقت */
+async function touchPresence(force){
+  if(!Store.isCloud() || !currentUser) return;
+  const id = myPresenceId();
+  if(!id) return;
+  const now = Date.now();
+  const mine = presenceMap[id];
+  if(!force && mine && (now - (mine.at || 0)) < PRESENCE_BEAT_MS - 5000) return;
+
+  let remote = {};
+  try{
+    const raw = await Store.get(PRESENCE_KEY);
+    remote = raw ? (JSON.parse(raw) || {}) : {};
+  }catch(e){ remote = {}; }
+
+  /* نحافظ على نبضات الباقيين ونحدّث بتاعتنا بس */
+  Object.keys(presenceMap).forEach(function(k){
+    const a = presenceMap[k], b = remote[k];
+    if(!b || (a && (a.at||0) > (b.at||0))) remote[k] = a;
+  });
+  if(!sessionStartedAt) sessionStartedAt = now;
+  remote[id] = {
+    name: currentUser.username,
+    at: now,
+    since: sessionStartedAt,
+    dev: deviceKind()
+  };
+  presenceMap = remote;
+  try{ await Store.set(PRESENCE_KEY, JSON.stringify(remote)); }catch(e){}
+}
+function startPresence(){
+  stopPresence();
+  if(!Store.isCloud()) return;
+  sessionStartedAt = Date.now();
+  touchPresence(true);
+  presenceTimer = setInterval(function(){ touchPresence(false); }, PRESENCE_BEAT_MS);
+}
+function stopPresence(){ if(presenceTimer) clearInterval(presenceTimer); presenceTimer = null; }
+
+function presenceState(entry){
+  if(!entry || !entry.at) return {cls:'off', label:'لسه مدخلش', sub:''};
+  const diff = Date.now() - entry.at;
+  if(diff < PRESENCE_ONLINE_MS)
+    return {cls:'on', label:'متصل دلوقتي', sub: entry.dev ? ('من ' + entry.dev) : ''};
+  if(diff < PRESENCE_IDLE_MS)
+    return {cls:'idle', label:'كان هنا ' + relTime(entry.at), sub: fmtShort(entry.at)};
+  return {cls:'off', label:'آخر ظهور ' + relTime(entry.at), sub: fmtDateTime(entry.at)};
+}
+function presenceHtml(id){
+  const st = presenceState(presenceMap[id]);
+  return '<div class="pres ' + st.cls + '"><span class="pres-dot"></span>' + escapeHtml(st.label) + '</div>' +
+         (st.sub ? '<div class="pres-sub">' + escapeHtml(st.sub) + '</div>' : '');
+}
+
 /* ================= تقرير أداء السيلز =================
    لكل سيلز: المكالمات والرسايل والواتساب والمقابلات،
    والحجوزات والإيراد والنقاط والبونص — لأي فترة.
@@ -4700,6 +4813,7 @@ async function refresh(){
   else if(v === 'pointsView') renderPoints();
   else if(v === 'bookingsView') renderBookings();
   else if(v === 'reportView') renderReport();
+  else if(v === 'ownerView' && cloudAuthActive()) renderCloudAccounts();
   else if(v === 'exportView') renderExport();
   else if(v === 'activityView') renderActivity();
   else if(v === 'sectionView') renderLeads();
@@ -4715,6 +4829,14 @@ function startAutoRefresh(){
 function stopAutoRefresh(){ if(autoTimer) clearInterval(autoTimer); autoTimer = null; }
 
 /* ================= EVENTS ================= */
+/* أول ما يفتح التطبيق تاني نسجّل إنه رجع */
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && currentUser && Store.isCloud()){
+    touchPresence(true);
+    if(currentEntry().view === 'ownerView') renderCloudAccounts();
+  }
+});
+
 $('authBtn').onclick = handleAuthSubmit;
 $('authOwnerLink').onclick = switchToOwnerSetup;
 
