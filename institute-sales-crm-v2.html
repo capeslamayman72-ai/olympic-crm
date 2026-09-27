@@ -359,6 +359,12 @@
   .pres.off  { color:var(--muted); }
   .pres.off  .pres-dot{ background:#C3CAD6; }
   .pres-sub{font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px;}
+  .pres-lines{
+    margin-top:6px;background:var(--paper);border-radius:8px;padding:6px 8px;
+    font-size:10.5px;color:var(--ink-soft);line-height:1.8;
+  }
+  .pres-lines b{color:var(--ink);font-weight:700;}
+  .pres-lines .ago{color:var(--muted);}
   .online-bar{
     background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:10px 12px;margin-bottom:12px;font-size:12.5px;font-weight:700;
@@ -3921,10 +3927,13 @@ async function touchPresence(force){
     if(!b || (a && (a.at||0) > (b.at||0))) remote[k] = a;
   });
   if(!sessionStartedAt) sessionStartedAt = now;
+  const prev = remote[id] || {};
   remote[id] = {
     name: currentUser.username,
     at: now,
     since: sessionStartedAt,
+    /* أول مرة اتسجل فيها دخول من أي جهاز */
+    first: prev.first || sessionStartedAt,
     dev: deviceKind()
   };
   presenceMap = remote;
@@ -3939,19 +3948,54 @@ function startPresence(){
 }
 function stopPresence(){ if(presenceTimer) clearInterval(presenceTimer); presenceTimer = null; }
 
+/* مدة الجلسة بشكل مقروء */
+function fmtSpan(ms){
+  const m = Math.floor(ms / 60000);
+  if(m < 1) return 'أقل من دقيقة';
+  if(m < 60) return m + ' دقيقة';
+  const h = Math.floor(m / 60), r = m % 60;
+  if(h < 24) return h + ' ساعة' + (r ? ' و' + r + ' دقيقة' : '');
+  const d = Math.floor(h / 24);
+  return d + ' يوم';
+}
 function presenceState(entry){
   if(!entry || !entry.at) return {cls:'off', label:'لسه مدخلش', sub:''};
   const diff = Date.now() - entry.at;
-  if(diff < PRESENCE_ONLINE_MS)
-    return {cls:'on', label:'متصل دلوقتي', sub: entry.dev ? ('من ' + entry.dev) : ''};
-  if(diff < PRESENCE_IDLE_MS)
-    return {cls:'idle', label:'كان هنا ' + relTime(entry.at), sub: fmtShort(entry.at)};
-  return {cls:'off', label:'آخر ظهور ' + relTime(entry.at), sub: fmtDateTime(entry.at)};
+  if(diff < PRESENCE_ONLINE_MS) return {cls:'on',   label:'متصل دلوقتي', sub:''};
+  if(diff < PRESENCE_IDLE_MS)   return {cls:'idle', label:'كان هنا ' + relTime(entry.at), sub:''};
+  return {cls:'off', label:'مش متصل', sub:''};
 }
 function presenceHtml(id){
-  const st = presenceState(presenceMap[id]);
-  return '<div class="pres ' + st.cls + '"><span class="pres-dot"></span>' + escapeHtml(st.label) + '</div>' +
-         (st.sub ? '<div class="pres-sub">' + escapeHtml(st.sub) + '</div>' : '');
+  const e = presenceMap[id];
+  const st = presenceState(e);
+  let html = '<div class="pres ' + st.cls + '"><span class="pres-dot"></span>' + escapeHtml(st.label) + '</div>';
+
+  if(!e || !e.at){
+    html += '<div class="pres-sub">مفتحش البرنامج ولا مرة</div>';
+    return html;
+  }
+
+  const online = (Date.now() - e.at) < PRESENCE_ONLINE_MS;
+  let lines = '';
+
+  /* آخر دخول = بداية آخر جلسة */
+  if(e.since){
+    lines += '🔑 آخر دخول: <b>' + fmtDateTime(e.since) + '</b>' +
+             ' <span class="ago">(' + relTime(e.since) + ')</span><br>';
+  }
+  /* آخر ظهور = آخر لحظة كان فيها فاتح البرنامج */
+  lines += '👁️ آخر ظهور: <b>' + (online ? 'دلوقتي' : fmtDateTime(e.at)) + '</b>';
+  if(!online) lines += ' <span class="ago">(' + relTime(e.at) + ')</span>';
+
+  /* مدة الجلسة */
+  if(e.since && e.at >= e.since){
+    lines += '<br>⏱️ ' + (online ? 'فاتح البرنامج من: ' : 'مدة آخر جلسة: ') +
+             '<b>' + fmtSpan((online ? Date.now() : e.at) - e.since) + '</b>';
+  }
+  if(e.dev) lines += '<br>📱 الجهاز: <b>' + escapeHtml(e.dev) + '</b>';
+
+  html += '<div class="pres-lines">' + lines + '</div>';
+  return html;
 }
 
 /* ================= تقرير أداء السيلز =================
