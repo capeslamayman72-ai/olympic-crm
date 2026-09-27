@@ -2265,11 +2265,16 @@ async function renderCloudAccounts(){
         '<div style="font-size:11px;margin-top:2px;">' + roleLabel + (isMe ? ' — أنت' : '') + '</div>' +
       '</div>' +
       (isMe || p.role === 'owner' ? '' :
-        '<div class="account-actions"><button class="account-del" title="' +
-        (p.role === 'disabled' ? 'إعادة تفعيل' : 'إيقاف الحساب') + '">' +
-        (p.role === 'disabled' ? '↺' : '✕') + '</button></div>');
-    const btn = row.querySelector('.account-del');
-    if(btn) btn.onclick = ()=> toggleAccountDisabled(p);
+        '<div class="account-actions">' +
+          '<button class="account-key" data-act="toggle" title="' +
+            (p.role === 'disabled' ? 'إعادة تفعيل' : 'إيقاف الحساب') + '">' +
+            (p.role === 'disabled' ? '↺' : '⏸') + '</button>' +
+          '<button class="account-del" data-act="remove" title="حذف الحساب نهائياً">🗑</button>' +
+        '</div>');
+    const bToggle = row.querySelector('[data-act="toggle"]');
+    if(bToggle) bToggle.onclick = ()=> toggleAccountDisabled(p);
+    const bRemove = row.querySelector('[data-act="remove"]');
+    if(bRemove) bRemove.onclick = ()=> deleteTeamMember(p);
     wrap.appendChild(row);
   });
 }
@@ -2311,6 +2316,46 @@ function buildWelcomeMessage(name, email, password){
 '💡 يفضّل تغيّر كلمة المرور بعد أول دخول من «إدارة الحسابات».'
   );
 }
+/* حذف حساب نهائياً — بيتم جوه قاعدة البيانات عن طريق دالة
+   بتتأكد إن اللي طالب الحذف مالك فعلاً (مش معتمد على إخفاء الزرار) */
+async function deleteTeamMember(p){
+  const warn =
+    'حذف حساب «' + p.username + '» نهائياً؟\n\n' +
+    '• مش هيقدر يسجّل دخول تاني خالص\n' +
+    '• الإيميل (' + (p.email || '') + ') هيبقى متاح لو حبيت تضيفه تاني بعدين\n\n' +
+    '✅ شغله القديم مش هيضيع:\n' +
+    '   سجل التواصل والحجوزات والنقاط هتفضل زي ما هي في التقارير.\n\n' +
+    'لو عايز توقفه مؤقتاً بس، استخدم زرار ⏸ بدل الحذف.\n\n' +
+    'تكمّل؟';
+  if(!confirm(warn)) return;
+  if(!confirm('تأكيد أخير: حذف «' + p.username + '» نهائياً؟')) return;
+
+  try{
+    await Store.rest('rpc/delete_team_member', {
+      method: 'POST',
+      headers: {'Prefer': 'return=minimal'},
+      body: JSON.stringify({target: p.id})
+    });
+    toast('اتحذف الحساب نهائياً');
+    renderCloudAccounts();
+  }catch(e){
+    const raw = e.message || '';
+    /* رد قاعدة البيانات بيجي JSON — نطلّع منه الرسالة المفهومة بس */
+    let msg = raw;
+    const j = raw.match(/\{[\s\S]*\}/);
+    if(j){
+      try{ msg = (JSON.parse(j[0]).message) || raw; }catch(err){}
+    }
+    if(/could not find the function|PGRST202|404/i.test(raw)){
+      alert('خاصية الحذف لسه ماتفعّلتش على قاعدة البيانات.\n\n' +
+            'شغّل ملف «_اضافة_حذف_الحسابات.sql» في SQL Editor الأول،\n' +
+            'وبعدين جرّب تاني.');
+    }else{
+      alert('مقدرناش نحذف الحساب:\n\n' + msg);
+    }
+  }
+}
+
 async function createCloudSalesAccount(){
   const name  = $('newSalesUsername').value.trim();
   const email = $('newSalesEmail').value.trim().toLowerCase();
