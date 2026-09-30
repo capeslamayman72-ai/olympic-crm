@@ -971,6 +971,8 @@
       </div>
       <button class="btn btn-gold btn-sm" id="cloudPushBtn" style="width:100%;margin-top:8px;">⬆️ رفع بيانات الجهاز ده للسيرفر</button>
       <button class="btn btn-danger btn-sm" id="rescueBtn" style="width:100%;margin-top:8px;">🚑 استرجاع بيانات ناقصة من الجهاز ده</button>
+      <button class="btn btn-gold btn-sm" id="forensicBtn" style="width:100%;margin-top:8px;">🔍 فحص شامل والبحث عن بيانات مفقودة</button>
+      <div id="forensicOut" style="margin-top:10px;"></div>
       <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.7;">
         لو الجهاز ده لسه شايف متقدمين مش ظاهرين على أجهزة تانية،
         اضغط «استرجاع» عشان يرجّعهم للسيرفر. بيضيف بس — مش بيمسح حاجة.
@@ -4024,6 +4026,142 @@ async function rescueMissingData(){
   }
 }
 
+/* 🔍 فحص شامل: بيدوّر على أي أثر لمتقدمين مش موجودين في البيانات الحالية
+   — من رسايل الشات، ومن مفاتيح الملاحظات الصوتية اليتيمة. */
+async function forensicScan(){
+  const box = $('forensicOut');
+  box.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px;">جاري الفحص...</div>';
+  const report = [];
+  const add = (t)=> report.push(t);
+
+  try{
+    /* ---- 1) الوضع الحالي ---- */
+    const res = await Store.getChecked(LEADS_KEY);
+    if(!res.ok){
+      box.innerHTML = '<div style="color:var(--danger);font-size:12.5px;padding:8px;">مقدرناش نقرا من السيرفر. اتأكد من النت وجرّب تاني.</div>';
+      return;
+    }
+    let srv = {};
+    if(res.value){ try{ srv = migrate(JSON.parse(res.value)); }catch(e){} }
+
+    const known = {};
+    let total=0, active=0, enrolled=0, deleted=0;
+    Object.keys(srv).forEach(function(sid){
+      (srv[sid]||[]).forEach(function(l){
+        known[l.id] = l; total++;
+        if(l.deletedAt) deleted++;
+        else if(l.enrolledAt) enrolled++;
+        else active++;
+      });
+    });
+    add('📊 الموجود على السيرفر دلوقتي:');
+    add('   الإجمالي: ' + total);
+    add('   نشطين: ' + active + ' | ملتحقين: ' + enrolled + ' | محذوفين: ' + deleted);
+
+    if(deleted || enrolled){
+      add('');
+      add('💡 في ' + (deleted+enrolled) + ' متقدم مخفيين (محذوفين/ملتحقين).');
+      add('   دول موجودين وممكن نرجّعهم للقوايم لو ده اللي ناقص.');
+    }
+
+    /* ---- 2) آثار في رسايل الشات ---- */
+    const found = {};
+    try{
+      const msgs = await Store.rest('chat_messages?select=lead_ref,created_at,author_name&limit=1000') || [];
+      msgs.forEach(function(m){
+        const r = m.lead_ref;
+        if(r && r.id && !known[r.id] && !found[r.id]){
+          found[r.id] = {id:r.id, name:r.name, phone:r.phone, sec:r.sec, src:'الشات'};
+        }
+      });
+      add('');
+      add('💬 رسايل الشات: اتفحص ' + msgs.length + ' رسالة');
+    }catch(e){ add(''); add('💬 مقدرناش نقرا الشات: ' + (e.message||'').slice(0,60)); }
+
+    /* ---- 3) مفاتيح ملاحظات صوتية يتيمة ---- */
+    let orphanVoice = [];
+    try{
+      const keys = await Store.rest('crm_kv?select=key&limit=5000') || [];
+      keys.forEach(function(row){
+        const k = row.key || '';
+        if(k.indexOf(VOICE_PREFIX) === 0){
+          const id = k.slice(VOICE_PREFIX.length);
+          if(!known[id]) orphanVoice.push(id);
+        }
+      });
+      add('🎙️ مفاتيح التخزين: ' + keys.length + ' | ملاحظات صوتية ليتامى: ' + orphanVoice.length);
+    }catch(e){ add('🎙️ مقدرناش نقرا قائمة المفاتيح: ' + (e.message||'').slice(0,60)); }
+
+    const cands = Object.values(found);
+    add('');
+    if(cands.length){
+      add('✅ لقينا ' + cands.length + ' متقدم ممكن نرجّعهم (بالاسم والرقم):');
+      cands.slice(0,20).forEach(function(c){ add('   • ' + (c.name||'—') + ' — ' + (c.phone||'—')); });
+      if(cands.length>20) add('   ... و' + (cands.length-20) + ' غيرهم');
+    }else{
+      add('❌ مفيش أي أثر لمتقدمين ناقصين في الشات.');
+    }
+    if(orphanVoice.length){
+      add('');
+      add('⚠️ في ' + orphanVoice.length + ' متقدم كان عندهم ملاحظات صوتية واتمسحوا.');
+      add('   الصوت لسه موجود بس الاسم والرقم راحوا.');
+    }
+
+    box.innerHTML =
+      '<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px;' +
+      'font-size:11.5px;line-height:1.9;white-space:pre-wrap;direction:rtl;">' +
+      escapeHtml(report.join('\n')) + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;">' +
+        '<button class="btn btn-ghost btn-sm" id="forensicCopy">📋 نسخ التقرير</button>' +
+        (cands.length ? '<button class="btn btn-primary btn-sm" id="forensicRestore">↩️ استرجاع الـ' + cands.length + '</button>' : '') +
+        ((deleted+enrolled) ? '<button class="btn btn-ghost btn-sm" id="forensicUnhide">👁️ إظهار المخفيين</button>' : '') +
+      '</div>';
+
+    $('forensicCopy').onclick = ()=> copyText(report.join('\n'), 'اتنسخ التقرير ✅');
+
+    if(cands.length) $('forensicRestore').onclick = async function(){
+      if(!confirm('نرجّع ' + cands.length + ' متقدم من رسايل الشات؟\n\nهيترجعوا بالاسم والرقم — سجل التواصل القديم بتاعهم راح.')) return;
+      const now = Date.now();
+      cands.forEach(function(c){
+        const sid = (c.sec && sectionMap[c.sec]) ? c.sec : SECTIONS[0].id;
+        if(!data[sid]) data[sid] = [];
+        if(data[sid].some(function(x){ return x.id === c.id; })) return;
+        data[sid].push({
+          id: c.id, name: c.name || 'متقدم مسترجع', phone: c.phone || '',
+          gov:'', status:'new', createdAt: now, updatedAt: now,
+          createdBy: currentUser.username, voiceCount: 0,
+          noteItems: [{id: uid('n'), by: currentUser.username, at: now,
+                       text: 'اترجّع تلقائياً من رسايل الشات بعد فقدان بيانات'}],
+          history: [{id: uid('h'), by: currentUser.username, method:'created', at: now}]
+        });
+      });
+      await saveData();
+      renderHome();
+      alert('✅ اترجّع ' + cands.length + ' متقدم.\nراجعهم في الأقسام وصحّح أي بيانات ناقصة.');
+      forensicScan();
+    };
+
+    if(deleted+enrolled) $('forensicUnhide').onclick = async function(){
+      if(!confirm('إظهار كل المتقدمين المخفيين (' + (deleted+enrolled) + ')؟\n\n' +
+                  'هيرجعوا لقوايم الأقسام. تقدر تخفيهم تاني بعدين.')) return;
+      let n = 0;
+      Object.keys(data).forEach(function(sid){
+        (data[sid]||[]).forEach(function(l){
+          if(l.deletedAt || l.enrolledAt){ l.deletedAt = null; l.enrolledAt = null; l.updatedAt = Date.now(); n++; }
+        });
+      });
+      await saveData();
+      renderHome();
+      alert('✅ رجع ' + n + ' متقدم للقوايم.');
+      forensicScan();
+    };
+
+  }catch(e){
+    box.innerHTML = '<div style="color:var(--danger);font-size:12.5px;padding:8px;">خطأ في الفحص: ' +
+      escapeHtml(e.message||String(e)) + '</div>';
+  }
+}
+
 async function pushLocalToCloud(){
   toast('جاري الرفع...');
   const ok = await Store.pushLocal(ALL_KEYS(), pushMergers());
@@ -5454,6 +5592,7 @@ $('cloudTestBtn').onclick = testAndSaveCloud;
 $('cloudClearBtn').onclick = clearCloud;
 $('cloudPushBtn').onclick = pushLocalToCloud;
 $('rescueBtn').onclick = rescueMissingData;
+$('forensicBtn').onclick = forensicScan;
 
 $('backupBtn').onclick = doBackup;
 $('restoreBtn').onclick = ()=> $('restoreFile').click();
