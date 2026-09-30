@@ -1847,10 +1847,30 @@ async function loadSections(){
   rebuildSectionMap();
   return SECTIONS;
 }
+/* دمج قائمتين دورات: الأحدث يكسب، والمحذوف بيفضل محذوف لو مفيش تعديل أحدث */
+function mergeSections(remoteArr, localArr){
+  const map = new Map();
+  (remoteArr||[]).forEach(function(x){ if(x && x.id) map.set(x.id, x); });
+  (localArr||[]).forEach(function(x){
+    if(!x || !x.id) return;
+    const ex = map.get(x.id);
+    if(!ex){ map.set(x.id, x); return; }
+    map.set(x.id, (x.updatedAt||0) >= (ex.updatedAt||0) ? x : ex);
+  });
+  return [...map.values()];
+}
 async function saveSections(){
   const map = new Map(allSectionRecords.map(s=>[s.id, s]));
-  SECTIONS.forEach(s => map.set(s.id, s));
+  SECTIONS.forEach(function(s){ s.updatedAt = s.updatedAt || Date.now(); map.set(s.id, s); });
   allSectionRecords = [...map.values()];
+
+  /* لازم ندمج مع السيرفر — من غير كده بنمسح دورات أجهزة تانية */
+  const res = await Store.getChecked(SECTIONS_KEY);
+  if(res.value){
+    try{ allSectionRecords = mergeSections(JSON.parse(res.value), allSectionRecords); }
+    catch(e){}
+  }
+  SECTIONS = allSectionRecords.filter(function(x){ return !x.deleted; });
   rebuildSectionMap();
   return await Store.set(SECTIONS_KEY, JSON.stringify(allSectionRecords));
 }
@@ -1862,14 +1882,40 @@ async function loadSettings(){
   try{ if(raw) settings = Object.assign(settings, JSON.parse(raw)); }catch(e){}
   return settings;
 }
-async function saveSettings(){ return await Store.set(SETTINGS_KEY, JSON.stringify(settings)); }
+/* الإعدادات: الأحدث يكسب، وكشوف التصفير بتتجمع من الطرفين */
+function mergeSettings(remote, local){
+  const r = remote || {}, l = local || {};
+  const base = (l.updatedAt || 0) >= (r.updatedAt || 0) ? Object.assign({}, r, l) : Object.assign({}, l, r);
+  const hist = new Map();
+  (r.resetHistory || []).forEach(function(h){ if(h && h.at) hist.set(h.at, h); });
+  (l.resetHistory || []).forEach(function(h){ if(h && h.at) hist.set(h.at, h); });
+  base.resetHistory = [...hist.values()].sort(function(a,b){ return a.at - b.at; });
+  base.pointsResetAt = Math.max(r.pointsResetAt || 0, l.pointsResetAt || 0);
+  return base;
+}
+async function saveSettings(){
+  settings.updatedAt = Date.now();
+  const res = await Store.getChecked(SETTINGS_KEY);
+  if(res.value){
+    try{ settings = mergeSettings(JSON.parse(res.value), settings); }catch(e){}
+  }
+  return await Store.set(SETTINGS_KEY, JSON.stringify(settings));
+}
 async function loadVoiceNotes(leadId){
   const raw = await Store.get(VOICE_PREFIX + leadId);
   if(!raw) return [];
   try{ const arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; }
   catch(e){ return []; }
 }
-async function saveVoiceNotes(leadId, arr){ return await Store.set(VOICE_PREFIX + leadId, JSON.stringify(arr)); }
+async function saveVoiceNotes(leadId, arr){
+  /* ملاحظة من جهاز تاني ممكن تكون اتضافت في نفس اللحظة */
+  const res = await Store.getChecked(VOICE_PREFIX + leadId);
+  let merged = arr || [];
+  if(res.value){
+    try{ merged = mergeById(JSON.parse(res.value), merged); }catch(e){}
+  }
+  return await Store.set(VOICE_PREFIX + leadId, JSON.stringify(merged));
+}
 
 /* كل الليدز غير المحذوفة */
 function allLeads(){
@@ -3546,12 +3592,12 @@ async function saveSection(){
   const icon  = $('secEmojiSel').value;
   if(editingSectionId){
     const s = sectionMap[editingSectionId];
-    if(s){ s.name = name; s.color = color; s.icon = icon; }
+    if(s){ s.name = name; s.color = color; s.icon = icon; s.updatedAt = Date.now(); }
   }else{
     const dupe = SECTIONS.find(s => normAr(s.name) === normAr(name));
     if(dupe){ toast('فيه دورة بنفس الاسم بالفعل'); return; }
     const id = 'sec' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-    SECTIONS.push({id, name, color, icon: icon || '🏅', custom:true});
+    SECTIONS.push({id, name, color, icon: icon || '🏅', custom:true, updatedAt: Date.now()});
     if(!data[id]) data[id] = [];
   }
   await saveSections();
@@ -3569,7 +3615,7 @@ async function deleteSection(){
   }
   if(!confirm('متأكد إنك عايز تحذف دورة «' + sectionMap[editingSectionId].name + '»؟')) return;
   const rec = allSectionRecords.find(s=>s.id === editingSectionId) || sectionMap[editingSectionId];
-  if(rec) rec.deleted = true;
+  if(rec){ rec.deleted = true; rec.updatedAt = Date.now(); }
   SECTIONS = SECTIONS.filter(s=>s.id !== editingSectionId);
   await saveSections();
   $('sectionOverlay').classList.remove('open');
@@ -5226,7 +5272,8 @@ async function doRestore(file){
   if(!p.leads){ toast('الملف مش نسخة احتياطية صحيحة'); return; }
   if(!confirm('هيتم دمج النسخة دي مع البيانات الحالية. تحب تكمّل؟')) return;
   data = mergeData(migrate(p.leads), data);
-  await Store.set(LEADS_KEY, JSON.stringify(data));
+  /* عبر saveData عشان يدمج مع السيرفر كمان وتشتغل شبكة الأمان */
+  await saveData();
   if(p.accounts && p.accounts.owner){
     (p.accounts.sales||[]).forEach(s=>{
       if(!(accounts.sales||[]).some(x=>x.username===s.username)) accounts.sales.push(s);
