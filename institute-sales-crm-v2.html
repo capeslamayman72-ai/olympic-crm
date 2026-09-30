@@ -970,6 +970,11 @@
         <button class="btn btn-ghost btn-sm" id="cloudClearBtn">فصل</button>
       </div>
       <button class="btn btn-gold btn-sm" id="cloudPushBtn" style="width:100%;margin-top:8px;">⬆️ رفع بيانات الجهاز ده للسيرفر</button>
+      <button class="btn btn-danger btn-sm" id="rescueBtn" style="width:100%;margin-top:8px;">🚑 استرجاع بيانات ناقصة من الجهاز ده</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.7;">
+        لو الجهاز ده لسه شايف متقدمين مش ظاهرين على أجهزة تانية،
+        اضغط «استرجاع» عشان يرجّعهم للسيرفر. بيضيف بس — مش بيمسح حاجة.
+      </div>
       <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.7;">
         عشان كل الأجهزة تتربط تلقائياً من غير ما تكتب البيانات دي على كل موبايل،
         حط نفس القيم في ملف <b class="ltr">config.js</b> وارفعه على الاستضافة.
@@ -1500,16 +1505,48 @@ const Store = (function(){
       }catch(e){ console.error('store.set', key, e); return false; }
     },
     /* رفع كل البيانات المحلية للسحابة — بيتنادى لما النت يرجع */
-    async pushLocal(keys){
+    /* ⚠️ مهم: لازم ندمج مع اللي على السيرفر قبل الرفع.
+       الكتابة المباشرة كانت بتمسح شغل الأجهزة التانية. */
+    async pushLocal(keys, mergers){
       if(!cloud) return false;
       let ok = true;
       for(const k of keys){
-        const v = await localGet(k);
-        if(v == null) continue;
-        try{ await cloudSet(k, v); }catch(e){ ok = false; }
+        const localVal = await localGet(k);
+        if(localVal == null) continue;
+        let finalVal = localVal;
+        const merge = mergers && mergers[k];
+        if(merge){
+          let remoteVal = null;
+          try{ remoteVal = await cloudGet(k); }
+          catch(e){ ok = false; continue; }   /* مقدرناش نقرأ؟ ما نكتبش أبداً */
+          try{ finalVal = merge(remoteVal, localVal); }
+          catch(e){ ok = false; continue; }
+        }
+        try{ await cloudSet(k, finalVal); }catch(e){ ok = false; }
       }
       if(ok){ pendingSync = false; mode = 'cloud'; }
       return ok;
+    },
+    /* قراءة بتوضّح هل نجحت فعلاً ولا رجعت من النسخة المحلية */
+    async getChecked(key){
+      try{
+        if(mode === 'cloud'){
+          try{
+            const v = await cloudGet(key);
+            if(v !== null) localSet(key, v);
+            return {ok:true, fromCloud:true, value:v};
+          }catch(e){
+            if(!isAuthError(e)) mode = 'cloud-offline';
+            return {ok:false, fromCloud:false, value: await localGet(key)};
+          }
+        }
+        if(mode === 'cloud-offline') return {ok:false, fromCloud:false, value: await localGet(key)};
+        if(mode === 'artifact'){
+          const r = await window.storage.get(key, true);
+          return {ok:true, fromCloud:true, value: (r && r.value) ? r.value : null};
+        }
+        return {ok:true, fromCloud:false, value: await localGet(key)};
+      }catch(e){ return {ok:false, fromCloud:false, value:null}; }
     },
     async testCloud(url, key){
       const prev = cloud;
@@ -1753,9 +1790,30 @@ async function rawLoad(){
   try{ return migrate(JSON.parse(raw)); }catch(e){ return {}; }
 }
 async function loadData(){ return await rawLoad(); }
+function countLeads(obj){
+  let n = 0;
+  Object.keys(obj||{}).forEach(function(k){ n += (obj[k]||[]).length; });
+  return n;
+}
 async function saveData(){
-  const remote = await rawLoad();
+  const res = await Store.getChecked(LEADS_KEY);
+  let remote = {};
+  if(res.value){ try{ remote = migrate(JSON.parse(res.value)); }catch(e){ remote = {}; } }
+
+  const before = countLeads(remote);
   data = mergeData(remote, data);
+  const after = countLeads(data);
+
+  /* شبكة أمان: الدمج المفروض ما يقللش العدد أبداً.
+     لو قلّ يبقى في حاجة غلط — نوقف الكتابة بدل ما نمسح بيانات. */
+  if(after < before){
+    console.error('ABORT save: leads shrank', before, '->', after);
+    alert('⚠️ اتوقف الحفظ لحماية البيانات\n\n' +
+          'البرنامج لقى إن الحفظ ده هيقلل عدد المتقدمين من ' + before + ' إلى ' + after + '.\n' +
+          'ما اتحفظش أي حاجة. اقفل البرنامج وافتحه تاني.');
+    return false;
+  }
+
   const ok = await Store.set(LEADS_KEY, JSON.stringify(data));
   if(!ok) toast('⚠️ فشل الحفظ — المساحة ممكن تكون امتلت');
   return ok;
@@ -3852,6 +3910,26 @@ const ALL_KEYS = ()=> (cloudAuthActive() ? [LEADS_KEY, SECTIONS_KEY, SETTINGS_KE
                                          : [LEADS_KEY, ACCOUNTS_KEY, SECTIONS_KEY, SETTINGS_KEY])
   .concat(allLeads().filter(l=>l.voiceCount>0).map(l=>VOICE_PREFIX + l.id));
 
+/* قواعد الدمج وقت الرفع — من غيرها الرفع بيمسح شغل الأجهزة التانية */
+function pushMergers(){
+  const m = {};
+  m[LEADS_KEY] = function(remoteRaw, localRaw){
+    let r = {}, l = {};
+    try{ r = remoteRaw ? migrate(JSON.parse(remoteRaw)) : {}; }catch(e){}
+    try{ l = localRaw  ? migrate(JSON.parse(localRaw))  : {}; }catch(e){}
+    return JSON.stringify(mergeData(r, l));
+  };
+  allLeads().filter(function(x){ return x.voiceCount > 0; }).forEach(function(x){
+    m[VOICE_PREFIX + x.id] = function(remoteRaw, localRaw){
+      let r = [], l = [];
+      try{ r = remoteRaw ? JSON.parse(remoteRaw) : []; }catch(e){}
+      try{ l = localRaw  ? JSON.parse(localRaw)  : []; }catch(e){}
+      return JSON.stringify(mergeById(r, l));
+    };
+  });
+  return m;
+}
+
 function renderCloudPanel(){
   const box = $('cloudStatus');
   const cfgFile = (window.CRM_CONFIG||{});
@@ -3895,9 +3973,60 @@ async function testAndSaveCloud(){
     await reloadEverything();
   }
 }
+/* 🚑 استرجاع: بيدمج نسخة الجهاز (الذاكرة + المحلي) مع السيرفر ويرفع الاتحاد.
+   بيضيف بس — مستحيل يمسح. */
+async function rescueMissingData(){
+  if(!Store.isCloud()){ toast('الاسترجاع بيشتغل في وضع السحابة بس'); return; }
+  toast('جاري الفحص...');
+  try{
+    const res = await Store.getChecked(LEADS_KEY);
+    if(!res.ok){
+      alert('مقدرناش نقرأ من السيرفر دلوقتي.\n\nاتأكد إن النت شغال وجرّب تاني.');
+      return;
+    }
+    let server = {};
+    if(res.value){ try{ server = migrate(JSON.parse(res.value)); }catch(e){} }
+
+    const union = mergeData(server, data);
+    const nServer = countLeads(server);
+    const nUnion  = countLeads(union);
+    const added   = nUnion - nServer;
+
+    if(added <= 0){
+      alert('الجهاز ده مفيهوش أي متقدمين زيادة عن السيرفر.\n\n' +
+            'على السيرفر: ' + nServer + ' متقدم\n' +
+            'على الجهاز ده: ' + countLeads(data) + '\n\n' +
+            'جرّب من جهاز تاني لسه شايف الأسماء الناقصة.');
+      return;
+    }
+
+    /* نعرض أسماء اللي هيترجعوا */
+    const serverIds = {};
+    Object.keys(server).forEach(function(k){ (server[k]||[]).forEach(function(l){ serverIds[l.id]=1; }); });
+    const names = [];
+    Object.keys(union).forEach(function(k){
+      (union[k]||[]).forEach(function(l){ if(!serverIds[l.id] && !l.deletedAt) names.push(l.name || l.phone || '—'); });
+    });
+
+    if(!confirm('🚑 لقينا ' + added + ' متقدم على الجهاز ده مش موجودين على السيرفر:\n\n' +
+                names.slice(0,25).join('\n') + (names.length > 25 ? '\n... و' + (names.length-25) + ' غيرهم' : '') +
+                '\n\nنرجّعهم للسيرفر؟ (مفيش حاجة هتتمسح)')) return;
+
+    data = union;
+    const ok = await Store.set(LEADS_KEY, JSON.stringify(data));
+    if(!ok){ alert('فشل الرفع. جرّب تاني.'); return; }
+    renderHome();
+    alert('✅ اترجّع ' + added + ' متقدم للسيرفر.\n\n' +
+          'الإجمالي دلوقتي: ' + countLeads(data) + '\n\n' +
+          'قول لباقي الفريق يقفلوا التطبيق ويفتحوه تاني.');
+  }catch(e){
+    alert('حصل خطأ أثناء الاسترجاع:\n' + (e.message||e));
+  }
+}
+
 async function pushLocalToCloud(){
   toast('جاري الرفع...');
-  const ok = await Store.pushLocal(ALL_KEYS());
+  const ok = await Store.pushLocal(ALL_KEYS(), pushMergers());
   toast(ok ? 'اترفعت البيانات ✅' : '⚠️ بعض البيانات مارفعتش — جرّب تاني');
   renderCloudPanel();
 }
@@ -4994,7 +5123,7 @@ async function refresh(){
   /* لو كنا أوفلاين وفي تعديلات مستنية، نحاول نرفعها أول ما النت يرجع */
   if(Store.mode === 'cloud-offline' && navigator.onLine){
     if(await Store.retryCloud() && Store.pending){
-      await Store.pushLocal(ALL_KEYS());
+      await Store.pushLocal(ALL_KEYS(), pushMergers());
       toast('اترفعت التعديلات المؤجلة ✅');
     }
   }
@@ -5324,6 +5453,7 @@ $('impFile').onchange = async e=>{
 $('cloudTestBtn').onclick = testAndSaveCloud;
 $('cloudClearBtn').onclick = clearCloud;
 $('cloudPushBtn').onclick = pushLocalToCloud;
+$('rescueBtn').onclick = rescueMissingData;
 
 $('backupBtn').onclick = doBackup;
 $('restoreBtn').onclick = ()=> $('restoreFile').click();
