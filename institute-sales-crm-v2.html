@@ -63,6 +63,13 @@
   }
   .dot{width:6px;height:6px;border-radius:50%;background:#4FD1A5;flex-shrink:0;}
   .dot.warn{background:var(--gold);}
+  .sync-note{cursor:pointer;}
+  .sync-age{
+    margin-inline-start:auto;font-size:10.5px;font-weight:700;
+    background:rgba(255,255,255,0.14);border-radius:7px;padding:3px 8px;white-space:nowrap;
+  }
+  .sync-age.stale{background:rgba(227,162,26,.35);color:#FFE9B8;}
+  .sync-age.syncing{background:rgba(79,209,165,.3);color:#CFF6E8;}
   .user-bar{
     margin-top:10px; display:flex;align-items:center;justify-content:space-between;gap:8px;
     font-size:11.5px;color:#C8D0E0;
@@ -623,7 +630,7 @@
     </div>
     <button class="back-btn" id="statsHomeBtn" title="الإحصائيات العامة">📊</button>
   </div>
-  <div class="sync-note"><span class="dot" id="storageDot"></span> <span id="storageNote">جاري فحص طريقة التخزين...</span></div>
+  <div class="sync-note" id="syncBar" title="اضغط للتحديث فوراً"><span class="dot" id="storageDot"></span> <span id="storageNote">جاري فحص طريقة التخزين...</span><span class="sync-age" id="syncAge" style="display:none;"></span></div>
   <div class="user-bar" id="userBar">
     <span id="userBarText"></span>
     <div class="user-bar-actions">
@@ -3124,6 +3131,8 @@ function closeSheet(){
   $('leadOverlay').classList.remove('open');
   editingId = null;
   currentVoiceNotes = [];
+  /* التحديث بيتوقف وشاشة المتقدم مفتوحة — نلحق بالفات أول ما تتقفل */
+  if(currentUser && (Store.isCloud() || Store.isShared())) refreshNow('sheet-closed');
 }
 async function saveLead(){
   const name = $('nameInput').value.trim();
@@ -5010,24 +5019,78 @@ async function refresh(){
   else if(v === 'activityView') renderActivity();
   else if(v === 'sectionView') renderLeads();
   else if(v === 'homeView') renderHome();
+  lastSyncAt = Date.now();
+  renderSyncAge();
 }
+/* ---------- مؤشر آخر مزامنة ---------- */
+let lastSyncAt = 0;
+let refreshing = false;
+let syncAgeTimer = null;
+
+function renderSyncAge(){
+  const el = $('syncAge');
+  if(!el) return;
+  if(!Store.isCloud() && !Store.isShared()){ el.style.display = 'none'; return; }
+  el.style.display = 'inline-block';
+  if(refreshing){ el.className = 'sync-age syncing'; el.textContent = '🔄 بيحدّث...'; return; }
+  if(!lastSyncAt){ el.className = 'sync-age'; el.textContent = '—'; return; }
+  const sec = Math.round((Date.now() - lastSyncAt) / 1000);
+  const stale = sec > 45;
+  el.className = 'sync-age' + (stale ? ' stale' : '');
+  el.textContent = (stale ? '⚠️ ' : '✓ ') +
+    (sec < 10 ? 'محدّث دلوقتي' : sec < 60 ? ('من ' + sec + ' ثانية') : ('من ' + relTime(lastSyncAt).replace('من ','')));
+}
+
+/* تحديث فوري — بيتنادى لما يرجع للتطبيق أو يضغط على الشريط */
+async function refreshNow(reason){
+  if(refreshing) return;
+  if($('leadOverlay').classList.contains('open') || recording) return;
+  refreshing = true; renderSyncAge();
+  try{ await refresh(); }
+  catch(e){ console.warn('refreshNow', reason, e); }
+  finally{ refreshing = false; renderSyncAge(); }
+}
+
 function startAutoRefresh(){
   stopAutoRefresh();
   if(!Store.isShared() && !Store.isCloud()) return;   /* التخزين المحلي مش محتاج polling */
   autoTimer = setInterval(()=>{
-    if(!$('leadOverlay').classList.contains('open') && !recording) refresh();
+    if(!$('leadOverlay').classList.contains('open') && !recording) refreshNow('timer');
   }, 8000);
+  /* عدّاد العرض بس — خفيف */
+  if(syncAgeTimer) clearInterval(syncAgeTimer);
+  syncAgeTimer = setInterval(renderSyncAge, 5000);
+  renderSyncAge();
 }
-function stopAutoRefresh(){ if(autoTimer) clearInterval(autoTimer); autoTimer = null; }
+function stopAutoRefresh(){
+  if(autoTimer) clearInterval(autoTimer); autoTimer = null;
+  if(syncAgeTimer) clearInterval(syncAgeTimer); syncAgeTimer = null;
+}
 
 /* ================= EVENTS ================= */
 /* أول ما يفتح التطبيق تاني نسجّل إنه رجع */
-document.addEventListener('visibilitychange', function(){
-  if(!document.hidden && currentUser && Store.isCloud()){
+/* متصفح الموبايل بيجمّد المؤقتات لما التطبيق يبقى في الخلفية،
+   فلازم نحدّث فوراً أول ما يرجع — ده سبب اختلاف الأرقام بين الأجهزة */
+function wakeAndSync(reason){
+  if(!currentUser) return;
+  if(Store.isCloud() || Store.isShared()) refreshNow(reason);
+  if(Store.isCloud()){
     touchPresence(true);
     if(currentEntry().view === 'ownerView') renderCloudAccounts();
   }
+}
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) wakeAndSync('visible');
 });
+window.addEventListener('focus',  function(){ wakeAndSync('focus'); });
+window.addEventListener('online', function(){ wakeAndSync('online'); });
+window.addEventListener('pageshow', function(e){ if(e.persisted) wakeAndSync('bfcache'); });
+$('syncBar').onclick = function(){
+  if(!currentUser) return;
+  if($('leadOverlay').classList.contains('open')){ toast('اقفل الشاشة دي الأول'); return; }
+  toast('جاري التحديث...');
+  refreshNow('manual');
+};
 
 $('authBtn').onclick = handleAuthSubmit;
 $('authOwnerLink').onclick = switchToOwnerSetup;
