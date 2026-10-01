@@ -1171,6 +1171,40 @@
   <img id="imgViewerImg" alt="">
 </div>
 
+<div id="authWarn" style="display:none;position:fixed;top:0;left:0;right:0;z-index:70;
+     background:#D64545;color:#fff;padding:10px 14px;font-size:12.5px;font-weight:700;
+     box-shadow:0 2px 10px rgba(0,0,0,.25);text-align:center;line-height:1.7;">
+  ⚠️ التعديلات مش بتتحفظ على السيرفر!
+  <div style="font-size:11px;font-weight:500;margin-top:3px;">
+    الجلسة انتهت (غالباً لأنك فاتح من جهاز تاني). شغلك متحفوظ على الجهاز ومستني.
+  </div>
+  <button id="authWarnBtn" style="background:#fff;color:#D64545;border-radius:8px;
+    padding:6px 16px;font-size:12px;font-weight:800;margin-top:7px;">
+    سجّل دخول تاني عشان يترفع
+  </button>
+</div>
+
+<!-- إعادة تسجيل الدخول من غير فقدان الشغل -->
+<div class="overlay" id="reauthOverlay">
+  <div class="sheet" style="max-width:400px;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">تسجيل دخول تاني</div>
+    <div style="font-size:12px;color:var(--ink-soft);line-height:1.8;margin-bottom:6px;">
+      الجلسة انتهت. اكتب كلمة المرور عشان نرفع شغلك المحفوظ على الجهاز.
+      <b>مفيش حاجة هتضيع.</b>
+    </div>
+    <div class="field-label">البريد الإلكتروني</div>
+    <input class="field-input ltr" id="reauthEmail" dir="ltr" readonly style="background:var(--paper);">
+    <div class="field-label">كلمة المرور</div>
+    <input class="field-input ltr" id="reauthPass" type="password" dir="ltr" placeholder="••••••">
+    <div class="auth-error" id="reauthErr"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="reauthCancel">بعدين</button>
+      <button class="btn btn-primary" id="reauthBtn">دخول ورفع</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1284,6 +1318,7 @@ const Store = (function(){
     return null;
   }
   let authToken = null;              /* JWT بتاع المستخدم الحالي */
+  let authBroken = false;            /* الجلسة باطلة — الكتابة بترفض */
   let onTokenExpired = null;         /* دالة بتحاول تجدد التوكن */
 
   /* Supabase عندها نوعين مفاتيح:
@@ -1429,6 +1464,8 @@ const Store = (function(){
   return {
     get mode(){ return mode; },
     get pending(){ return pendingSync; },
+    get authBroken(){ return authBroken; },
+    clearAuthBroken(){ authBroken = false; },
     get cloudUrl(){ return cloud ? cloud.url : null; },
     get anonKey(){ return cloud ? cloud.key : null; },
     get token(){ return authToken; },
@@ -1473,7 +1510,8 @@ const Store = (function(){
             if(v !== null) localSet(key, v);      /* نسخة محلية للأوفلاين */
             return v;
           }catch(e){
-            if(!isAuthError(e)) mode = 'cloud-offline';
+            if(isAuthError(e)) authBroken = true;
+            else mode = 'cloud-offline';
             return await localGet(key);
           }
         }
@@ -1491,15 +1529,19 @@ const Store = (function(){
           await localSet(key, value);             /* الحفظ المحلي الأول دايماً */
           try{
             await cloudSet(key, value);
-            mode = 'cloud'; pendingSync = false;
+            mode = 'cloud'; pendingSync = false; authBroken = false;
             return true;
           }catch(e){
+            /* ❌ ممنوع نقول إنها اتحفظت وهي اترفضت.
+               الجلسة بتبطل لما جهاز تاني يجدّد نفس الحساب. */
+            pendingSync = true;
             if(isAuthError(e)){
-              console.warn('cloud set denied (not signed in)', e.message);
-              return true;                        /* اتحفظت محلياً */
+              authBroken = true;
+              console.error('cloud write REJECTED (session invalid)', e.message);
+            }else{
+              mode = 'cloud-offline';
             }
-            mode = 'cloud-offline'; pendingSync = true;
-            return true;                          /* اتحفظت محلياً — هترفع لما النت يرجع */
+            return true;   /* البيانات متحفوظة محلياً ومستنية الرفع */
           }
         }
         if(mode === 'artifact'){ await window.storage.set(key, value, true); return true; }
@@ -1538,7 +1580,8 @@ const Store = (function(){
             if(v !== null) localSet(key, v);
             return {ok:true, fromCloud:true, value:v};
           }catch(e){
-            if(!isAuthError(e)) mode = 'cloud-offline';
+            if(isAuthError(e)) authBroken = true;
+            else mode = 'cloud-offline';
             return {ok:false, fromCloud:false, value: await localGet(key)};
           }
         }
@@ -1818,6 +1861,7 @@ async function saveData(){
 
   const ok = await Store.set(LEADS_KEY, JSON.stringify(data));
   if(!ok) toast('⚠️ فشل الحفظ — المساحة ممكن تكون امتلت');
+  updateAuthWarn();
   return ok;
 }
 async function loadAccounts(){
@@ -2053,6 +2097,7 @@ const CloudAuth = {
       return true;
     }catch(e){
       Store.setAuthToken(this.session ? this.session.access_token : null);
+      console.error('session refresh failed — جهاز تاني جدّد نفس الحساب', e.message);
       return false;
     }
   },
@@ -4871,6 +4916,60 @@ function exportBookingsCsv(){
   toast('اتنزّل الملف ✅');
 }
 
+/* ================= تحذير انتهاء الجلسة =================
+   لو السيرفر رفض الكتابة، ممنوع نفضل ساكتين — الشغل بيفضل
+   محفوظ محلياً وبيترفع أول ما تسجّل دخول تاني.
+===================================================== */
+let authWarnShown = false;
+function updateAuthWarn(){
+  const bar = $('authWarn');
+  if(!bar) return;
+  const broken = Store.authBroken && currentUser;
+  bar.style.display = broken ? 'block' : 'none';
+  document.body.style.paddingTop = broken ? (bar.offsetHeight + 'px') : '';
+  if(broken && !authWarnShown){
+    authWarnShown = true;
+    try{ if(soundOn) playSuccessJingle(); }catch(e){}
+  }
+  if(!broken) authWarnShown = false;
+}
+function openReauth(){
+  const email = (CloudAuth.profile && CloudAuth.profile.email) || (currentUser && currentUser.email) || '';
+  $('reauthEmail').value = email;
+  $('reauthPass').value = '';
+  $('reauthErr').style.display = 'none';
+  $('reauthOverlay').classList.add('open');
+  setTimeout(function(){ $('reauthPass').focus(); }, 200);
+}
+async function doReauth(){
+  const email = $('reauthEmail').value.trim();
+  const pass  = $('reauthPass').value;
+  if(!pass){ $('reauthErr').textContent = 'اكتب كلمة المرور'; $('reauthErr').style.display='block'; return; }
+  const btn = $('reauthBtn');
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+  try{
+    const prof = await CloudAuth.signIn(email, pass);
+    if(!prof || (prof.role !== 'owner' && prof.role !== 'sales')){
+      $('reauthErr').textContent = 'الحساب مالوش صلاحية. كلّم المالك.';
+      $('reauthErr').style.display = 'block';
+      return;
+    }
+    Store.clearAuthBroken();
+    updateAuthWarn();
+    toast('جاري رفع الشغل المحفوظ...');
+    const ok = await Store.pushLocal(ALL_KEYS(), pushMergers());
+    await refreshNow('after-reauth');
+    $('reauthOverlay').classList.remove('open');
+    alert(ok ? '✅ اترفع كل الشغل المحفوظ على الجهاز ده.'
+             : '⚠️ اترفع جزء من الشغل. اضغط على شريط المزامنة فوق تاني بعد شوية.');
+  }catch(e){
+    $('reauthErr').textContent = translateAuthError(e);
+    $('reauthErr').style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = 'دخول ورفع';
+  }
+}
+
 /* ================= الشات الجماعي =================
    الرسايل في جدول مستقل على السيرفر عشان الإرسال ما يعيدش كتابة كل البيانات،
    ومحتاج قاعدة البيانات المشتركة (مفيش شات بين جهاز وحاله).
@@ -5335,6 +5434,7 @@ async function refresh(){
   else if(v === 'homeView') renderHome();
   lastSyncAt = Date.now();
   renderSyncAge();
+  updateAuthWarn();
 }
 /* ---------- مؤشر آخر مزامنة ---------- */
 let lastSyncAt = 0;
@@ -5399,6 +5499,11 @@ document.addEventListener('visibilitychange', function(){
 window.addEventListener('focus',  function(){ wakeAndSync('focus'); });
 window.addEventListener('online', function(){ wakeAndSync('online'); });
 window.addEventListener('pageshow', function(e){ if(e.persisted) wakeAndSync('bfcache'); });
+$('authWarnBtn').onclick = openReauth;
+$('reauthBtn').onclick = doReauth;
+$('reauthCancel').onclick = function(){ $('reauthOverlay').classList.remove('open'); };
+$('reauthPass').onkeydown = function(e){ if(e.key === 'Enter') doReauth(); };
+
 $('syncBar').onclick = function(){
   if(!currentUser) return;
   if($('leadOverlay').classList.contains('open')){ toast('اقفل الشاشة دي الأول'); return; }
